@@ -56,10 +56,10 @@ const Navbar = () => {
 
                     {/* CTA Button */}
                     <Link
-                        href="#"
+                        href="/user-login"
                         className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#20B3BC] to-[#13C998] text-white font-bold text-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
                     >
-                        Get Started
+                        Login/Signup
                     </Link>
                 </div>
 
@@ -114,10 +114,10 @@ const Navbar = () => {
                             Contact
                         </Link>
                         <Link
-                            href="#"
+                            href="/user-login"
                             className="block w-full text-center px-6 py-3 rounded-full bg-gradient-to-r from-[#20B3BC] to-[#13C998] text-white font-bold text-sm hover:shadow-lg transition-all"
                         >
-                            Get Started
+                            Login/Signup
                         </Link>
                     </div>
                 </div>
