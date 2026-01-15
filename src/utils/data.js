@@ -144,4 +144,17 @@ export const events = [
     price: "0",
     url: "https://www.mangalurutriathlon.com/index.php",
   },
+    {
+    id: 5,
+    img: "/hero_kan.png",
+    title: "Karnataka Acceleration Network(KAN)",
+    description:
+      "A flagship startup acceleration program by the Government of Karnataka and KDEM, designed to help early-stage startups scale faster through mentorship, market access and investor readiness.",
+    calendar: "Jan 9 2026",
+    time: "9:30 AM",
+    location: "Mangaluru",
+    attendees: "25K+ People",
+    price: "0",
+    url: "/kan-event",
+  },
 ];

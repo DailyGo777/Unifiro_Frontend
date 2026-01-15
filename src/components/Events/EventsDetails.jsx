@@ -76,7 +76,7 @@ export default function EventExperience({ event }) {
 
           <Link href={"/emerge"}>
             <button className="w-full cursor-pointer mb-2 bg-gradient-to-r from-teal-500 to-lime-400 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition">
-              Register Now →
+              Registeration Closed →
             </button>
           </Link>
 
