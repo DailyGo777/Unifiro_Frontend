@@ -6,12 +6,17 @@ import * as yup from "yup";
 import { api } from "@/utils/api";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { useSearchParams } from "next/navigation";
 
 const schema = yup.object({
   email: yup.string().email().required("Email required"),
 });
 
 export default function ForgotPassword() {
+
+  const params = useSearchParams();
+  const userType = params.get("type");
+
   const {
     register,
     handleSubmit,
@@ -20,10 +25,18 @@ export default function ForgotPassword() {
 
   const onSubmit = async (data) => {
     try {
-      await api.post("/users/forgot-password", data);
-      toast.success("Email sent successfully")
-    } catch (error){
-      toast.error(error.response?.data?.message)
+      if (!["user", "organiser"].includes(userType)) {
+        return toast.error("Invalid verification type");
+      }
+      if (userType === "user") {
+        await api.post("/users/forgot-password", data);
+      } else {
+        await api.post("/organizer/forgot-password", data);
+      }
+
+      toast.success("Email sent successfully!");
+    } catch (error) {
+      toast.error(error.response?.data?.message);
     }
   };
 

@@ -34,3 +34,9 @@ export const step3Schema = yup.object({
     .required(),
   terms: yup.boolean().oneOf([true], "Accept terms to continue"),
 });
+
+export const organizerLoginSchema = yup.object({
+  identifier: yup.string().required("Email or phone required"),
+  password: yup.string().required("Password required"),
+  rememberMe: yup.boolean(),
+});

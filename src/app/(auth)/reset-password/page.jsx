@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -9,14 +8,14 @@ import { Eye, EyeClosed } from "lucide-react";
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const schema = yup.object({
   password: yup
     .string()
     .matches(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,10}$/,
-      "Password must be 6-10 chars with uppercase, lowercase, number & special character"
+      "Password must be 6-10 chars with uppercase, lowercase, number & special character",
     )
     .required(),
 });
@@ -24,8 +23,9 @@ const schema = yup.object({
 function ResetPasswordForm() {
   const params = useSearchParams();
   const token = params.get("token");
+  const userType = params.get("type");
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   const {
     register,
@@ -35,15 +35,29 @@ function ResetPasswordForm() {
 
   const onSubmit = async (data) => {
     try {
-      await api.post("/users/reset-password", {
-        token,
-        password: data.password,
-      });
+      if (!["user", "organiser"].includes(userType)) {
+        return toast.error("Invalid verification type");
+      }
+      if (userType === "user") {
+        await api.post("/users/reset-password", {
+          token,
+          password: data.password,
+        });
+      } else {
+        await api.post("/organizer/reset-password", {
+          token,
+          password: data.password,
+        });
+      }
+
+      const redirectPath =
+        userType === "user" ? "/user-login" : "/organiser-login";
+
       toast.success("Password changed successfully!", {
-        onClose: () => router.push("/user-login")
-      })
+        onClose: () => router.push(redirectPath),
+      });
     } catch (error) {
-      console.log(error.response?.data?.message)
+      toast.error(error.response?.data?.message);
     }
   };
 
@@ -87,11 +101,13 @@ function ResetPasswordForm() {
 
 export default function ResetPassword() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-200 via-yellow-100 to-orange-200">
-        <div className="text-teal-600">Loading...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-200 via-yellow-100 to-orange-200">
+          <div className="text-teal-600">Loading...</div>
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );

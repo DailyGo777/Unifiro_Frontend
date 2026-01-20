@@ -12,6 +12,7 @@ function Page() {
 
   const params = useSearchParams();
   const email = params.get("email");
+  const userType = params.get("type");
 
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -38,23 +39,46 @@ function Page() {
       return toast.error("Enter a valid 6-digit OTP");
     }
 
+    if (!["user", "organiser"].includes(userType)) {
+      return toast.error("Invalid verification type");
+    }
+
     try {
-      await api.post("/users/verify-email", {
-        email,
-        otp: otpValue,
-      });
+      if (userType === "user") {
+        await api.post("/users/verify-email", {
+          email,
+          otp: otpValue,
+        });
+      } else {
+        await api.post("/organizer/verify-email", {
+          email,
+          otp: otpValue,
+        });
+      }
+
+      const redirectPath =
+        userType === "user" ? "/user-login" : "/organiser-login";
 
       toast.success("Email verified successfully!", {
-        onClose: () => router.push("/user-login"),
+        onClose: () => router.push(redirectPath),
       });
     } catch (error) {
-      toast.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message || "Verification failed");
     }
   };
 
   const handleResend = async () => {
     try {
-      await api.post("/users/resend-emailOtp", { email });
+      
+      if (!["user", "organizer"].includes(userType)) {
+        return toast.error("Invalid verification type");
+      }
+
+      if (userType === "user") {
+        await api.post("/users/resend-emailOtp", { email });
+      } else {
+        await api.post("/organizer/resend-emailOtp", { email });
+      }
       toast.success("OTP resent successfully");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to resend OTP");
@@ -122,5 +146,5 @@ export default function VerifyOtpPage() {
     <Suspense>
       <Page />
     </Suspense>
-  )
+  );
 }

@@ -26,7 +26,7 @@ export default function SignupPage() {
     try {
       await api.post("/users/signup", data);
       toast.success("Account created successfully!", {
-        onClose: () => router.push(`/verify-otp?email=${data.email}`),
+        onClose: () => router.push(`/verify-otp?email=${data.email}&type=user`),
       });
     } catch (err) {
       toast.error(err.response?.data?.message)

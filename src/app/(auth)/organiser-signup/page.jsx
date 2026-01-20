@@ -39,7 +39,7 @@ export default function OrganizerSignup() {
 
       await api.post("/organizer/signup", mergedData);
       toast.success("Account registered successfully!", {
-        onClose: router.push("/organiser-login")
+        onClose: router.push(`/verify-otp?email=${data.email}&type=organiser`)
       })
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");

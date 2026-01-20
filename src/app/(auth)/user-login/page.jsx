@@ -78,7 +78,7 @@ export default function LoginPage() {
             <input type="checkbox" {...register("rememberMe")} />
             Remember me
           </label>
-          <Link href={"/forgot-password"}>
+          <Link href={"/forgot-password?type=user"}>
             <span className="underline cursor-pointer">Forgot password?</span>
           </Link>
         </div>
