@@ -40,7 +40,9 @@ const Hero = () => {
               Explore Events
             </button>
           </Link>
-          <Link href={"/organiser-login"}>
+          {/* // Assuming you have an 'isLoggedIn' variable from your auth state
+          const destination = isLoggedIn ? "/dashboard" : "/organiser-login"; */}
+          <Link href={"/dashboard"}>
             <button className="w-full cursor-pointer sm:w-auto px-8 md:px-10 py-3 md:py-4 rounded-xl bg-white text-black font-bold text-lg md:text-xl border border-gray-300 shadow-sm hover:shadow-md hover:scale-105 transition-all">
               Host an Event
             </button>
