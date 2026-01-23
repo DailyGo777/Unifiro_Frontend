@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -12,7 +13,7 @@ const schema = yup.object({
   email: yup.string().email().required("Email required"),
 });
 
-export default function ForgotPassword() {
+function Page() {
 
   const params = useSearchParams();
   const userType = params.get("type");
@@ -81,5 +82,13 @@ function Input({ label, error, ...props }) {
       />
       {error && <p className="text-red-500 text-xs mt-1">{error.message}</p>}
     </div>
+  );
+}
+
+export default function ForgotPassword() {
+  return (
+    <Suspense>
+      <Page />
+    </Suspense>
   );
 }
