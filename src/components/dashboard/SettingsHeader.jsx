@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function DashboardHeader({ title = "Dashboard", children }) {
+export default function SettingsHeader({ title = "Settings", children }) {
     return (
         <div className="flex-1 flex flex-col overflow-auto">
             <header className="h-25 w-full ml-0 bg-white border-b border-orange-200 shadow-lg shadow-orange-400/30 flex items-center px-8 shrink-0">
