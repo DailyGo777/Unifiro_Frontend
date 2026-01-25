@@ -67,7 +67,7 @@ export default function Sidebar() {
             <Link href={"/create-event"}>
                 <button
 
-                    className={`bg-gradient-to-r from-[#14b8a6] via-[#22c55e] to-[#84cc16] text-white font-medium rounded-xl flex items-center justify-center shadow-lg shadow-teal-100 hover:shadow-xl transition-all mb-8 whitespace-nowrap
+                    className={`bg-gradient-to-r cursor-pointer from-[#14b8a6] via-[#22c55e] to-[#84cc16] text-white font-medium rounded-xl flex items-center justify-center shadow-lg shadow-teal-100 hover:shadow-xl transition-all mb-8 whitespace-nowrap
                 ${isCollapsed ? "w-12 h-12 p-0 mx-auto" : "w-full py-3 px-4 gap-2"}`}
                 >
                     <Plus size={20} />
@@ -92,7 +92,7 @@ export default function Sidebar() {
               `}
                         >
                             <div className={`flex items-center w-full h-full rounded-[10px] transition-all duration-200 text-black
-                                ${isActive ? "bg-white dark:bg-gray-900" : ""} 
+                                ${isActive ? "bg-white" : ""} 
                                 ${isCollapsed ? "justify-center p-3" : "gap-4 px-4 py-3"}
                             `}>
                                 {/* active visible only when not collapsed */}
