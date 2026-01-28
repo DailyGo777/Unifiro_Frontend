@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import TemplateLanding from "@/components/create-event/TemplateSection/TemplateLanding";
 import TemplateGallery from "@/components/create-event/TemplateSection/TemplateGallery";
+import TemplateBuilder from "@/components/create-event/TemplateSection/TemplateBuilder";
 
 const TemplatesPage = () => {
     // view can be 'landing' or 'gallery'
@@ -66,7 +67,7 @@ const TemplatesPage = () => {
                         </div>
                         {/* card1 */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl pb-24">
-                            <div onClick={() => setView('gallery')} className="group cursor-pointer">
+                            <div onClick={() => setView('builder')} className="group cursor-pointer">
                                 <div className="h-100 rounded-[24px] bg-gradient-to-br from-[#A0E8D9] via-[#85DABF] to-[#CDF4A4] p-1 shadow-lg transition-all duration-500 transform group-hover:-translate-y-3 group-hover:shadow-2xl relative overflow-hidden flex items-center justify-center">
                                     <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     <Plus className="w-24 h-24 text-white drop-shadow-md" strokeWidth={1.5} />
@@ -123,6 +124,10 @@ const TemplatesPage = () => {
                         personalTemplates={personalTemplates}
                         gradientClass={gradientClass}
                     />
+                )}
+                {/* 3. BUILDER VIEW */}
+                {view === 'builder' && (
+                    <TemplateBuilder onBack={() => setView('landing')} />
                 )}
             </div>
         </div>
