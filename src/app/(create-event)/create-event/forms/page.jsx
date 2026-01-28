@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Plus, Trash2, Layout, Share2,
   GripVertical, Type, CheckSquare, CircleDot, Calendar,
@@ -159,6 +160,7 @@ const BlockMenu = ({ onSelect, onClose }) => {
 };
 
 export default function FormsPage() {
+  const router = useRouter();
   const [blocks, setBlocks] = useState(INITIAL_BLOCKS);
   const [view, setView] = useState('build');
   const [activeMenu, setActiveMenu] = useState(null);
@@ -187,12 +189,35 @@ export default function FormsPage() {
   }, []);
 
   const saveDraft = () => {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(blocks));
+    // Save to localStorage as a personal template
+    const personalTemplates = JSON.parse(localStorage.getItem('personalTemplates') || '[]');
+    
+    const formName = prompt('Enter a name for this template:');
+    if (!formName) return;
+    
+    const newTemplate = {
+      id: Math.random().toString(36).substr(2, 9),
+      title: formName,
+      category: 'Personal',
+      blocks: blocks,
+      createdAt: new Date().toISOString(),
+      image: coverImage || null,
+      logo: logo || null
+    };
+    
+    personalTemplates.push(newTemplate);
+    localStorage.setItem('personalTemplates', JSON.stringify(personalTemplates));
+    
     if (toast) {
-      toast.success("Draft saved successfully");
+      toast.success("Template saved successfully! Redirecting...");
     } else {
-      alert("Draft saved successfully");
+      alert("Template saved successfully!");
     }
+    
+    // Navigate to templates page after a short delay
+    setTimeout(() => {
+      router.push('/create-event/templates');
+    }, 1000);
   };
 
   const addBlock = (type, index) => {
@@ -264,28 +289,32 @@ export default function FormsPage() {
 
   const renderGenericInput = (block, themeColorVal) => {
     switch (block.type) {
-      case 'short_answer': return <input type="text" disabled placeholder={block.placeholder || "Short answer text"} className="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm" />;
-      case 'long_answer': return <textarea disabled placeholder={block.placeholder || "Long answer text"} className="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm h-20 resize-none" />;
-      case 'multiple_choice': return <div className="space-y-2">{block.options.map((opt, i) => <div key={i} className="flex items-center gap-2"><CircleDot size={16} className="text-gray-400" /><span className="text-sm text-gray-500">{opt}</span></div>)}</div>;
-      case 'checkboxes': return <div className="space-y-2">{block.options.map((opt, i) => <div key={i} className="flex items-center gap-2"><CheckSquare size={16} className="text-gray-400" /><span className="text-sm text-gray-500">{opt}</span></div>)}</div>;
-      case 'dropdown': return <div className="p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm flex justify-between items-center"><span>Select an option</span><ChevronDown size={16} /></div>;
-      case 'date': return <div className="p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm flex items-center gap-2"><Calendar size={16} /> MM/DD/YYYY</div>;
-      case 'time': return <div className="p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm flex items-center gap-2"><MousePointer2 size={16} /> 00:00 AM</div>;
-      case 'email': return <div className="p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm flex items-center gap-2"><Mail size={16} /> email@example.com</div>;
-      case 'phone': return <div className="p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm flex items-center gap-2"><Phone size={16} /> (555) 000-0000</div>;
-      case 'url': return <div className="p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm flex items-center gap-2"><LinkIcon size={16} /> https://example.com</div>;
-      case 'number': return <div className="p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm flex items-center gap-2"><Hash size={16} /> Number</div>;
-      case 'rating': return <div className="flex gap-1 text-gray-300"><Star fill="currentColor" size={24} /><Star fill="currentColor" size={24} /><Star fill="currentColor" size={24} /><Star fill="currentColor" size={24} /><Star fill="currentColor" size={24} /></div>;
-      case 'slider': return <div className="h-2 bg-gray-200 rounded w-full mt-2 relative"><div className="absolute left-1/3 w-4 h-4 bg-gray-400 rounded-full -top-1"></div></div>;
-      case 'file': return <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400"><Upload size={20} className="mb-2" /><span className="text-sm">File Upload</span></div>;
-      case 'divider': return <hr className="border-gray-200 my-4" />;
-      default: return <div className="p-3 bg-gray-50 border border-gray-100 rounded text-gray-400 text-sm italic">Configurable {block.type.replace('_', ' ')} block</div>;
+      case 'short_answer': return <input type="text" disabled placeholder={block.placeholder || "Short answer text"} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal focus:ring-2 focus:ring-offset-0 focus:border-gray-300 transition-shadow" />;
+      case 'long_answer': return <textarea disabled placeholder={block.placeholder || "Long answer text"} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal h-20 resize-none focus:ring-2 focus:ring-offset-0 focus:border-gray-300 transition-shadow" />;
+      case 'multiple_choice': return <div className="space-y-3">{block.options.map((opt, i) => <div key={i} className="flex items-center gap-3"><div className="w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0"></div><span className="text-sm text-gray-700">{opt}</span></div>)}</div>;
+      case 'checkboxes': return <div className="space-y-3">{block.options.map((opt, i) => <div key={i} className="flex items-center gap-3"><div className="w-5 h-5 border-2 border-gray-300 rounded flex-shrink-0"></div><span className="text-sm text-gray-700">{opt}</span></div>)}</div>;
+      case 'dropdown': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex justify-between items-center"><span>Select an option</span><ChevronDown size={18} className="text-gray-400" /></div>;
+      case 'date': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><Calendar size={18} className="text-gray-400" /><span>MM/DD/YYYY</span></div>;
+      case 'time': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><MousePointer2 size={18} className="text-gray-400" /><span>00:00 AM</span></div>;
+      case 'email': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><Mail size={18} className="text-gray-400" /><span>email@example.com</span></div>;
+      case 'phone': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><Phone size={18} className="text-gray-400" /><span>(555) 000-0000</span></div>;
+      case 'url': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><LinkIcon size={18} className="text-gray-400" /><span>https://example.com</span></div>;
+      case 'number': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><Hash size={18} className="text-gray-400" /><span>Number</span></div>;
+      case 'rating': return <div className="flex gap-2 text-gray-300"><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /></div>;
+      case 'slider': return <div className="flex items-center gap-4 py-2"><span className="text-xs text-gray-500">0</span><div className="h-2 bg-gray-200 rounded-full flex-1 relative"><div className="absolute left-1/3 w-5 h-5 bg-white border-2 border-gray-300 rounded-full -top-1.5 shadow-sm"></div></div><span className="text-xs text-gray-500">100</span></div>;
+      case 'file': return <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-gray-400 bg-gray-50/30"><Upload size={24} className="mb-2" /><span className="text-sm font-medium">Click to upload or drag and drop</span><span className="text-xs text-gray-500 mt-1">PNG, JPG, PDF up to 10MB</span></div>;
+      case 'address': return <input type="text" disabled placeholder={block.placeholder || "Street address, city, state, zip"} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal focus:ring-2 focus:ring-offset-0 focus:border-gray-300 transition-shadow" />;
+      case 'country': return <input type="text" disabled placeholder={block.placeholder || "Select a country"} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal focus:ring-2 focus:ring-offset-0 focus:border-gray-300 transition-shadow" />;
+      case 'divider': return <div className="my-6 border-t border-gray-200"></div>;
+      default: return <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 text-sm font-medium italic">Configurable {block.type.replace('_', ' ')} block</div>;
     }
   };
 
   const renderBlockEditor = (block, index) => {
     const isEditing = activeMenu === block.id;
     const isBasicText = ['text', 'heading_1', 'heading_2', 'heading_3', 'quote', 'callout'].includes(block.type);
+    const blockTypeInfo = BLOCK_TYPES.find(bt => bt.id === block.type);
+    const BlockIcon = blockTypeInfo?.icon;
 
     return (
       <div
@@ -322,6 +351,7 @@ export default function FormsPage() {
                 value={block.content}
                 rows={1}
                 onChange={(e) => { updateBlock(block.id, { content: e.target.value }); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }}
               />
               {!block.isTitle && (
                 <div className="absolute right-0 top-0 opacity-0 group-hover/text:opacity-100 transition-opacity bg-white shadow-sm border border-gray-200 rounded p-1">
@@ -330,36 +360,52 @@ export default function FormsPage() {
               )}
             </div>
           ) : (
-            <div className={`bg-white border-l-4 border-transparent pl-4 py-4 transition-all rounded-r-lg hover:shadow-sm ${activeMenu === block.id ? `border-${themeColor.value}-400 shadow-md` : 'hover:border-gray-300'}`}>
-              <div className="flex justify-between items-start mb-2">
-                <input className="w-full text-base font-semibold text-gray-800 border-none focus:ring-0 p-0 bg-transparent placeholder-gray-400" value={block.content} onChange={(e) => updateBlock(block.id, { content: e.target.value })} placeholder="Question label..." />
-                {block.system && <span className="text-[10px] uppercase font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded ml-2 whitespace-nowrap">Required</span>}
+            <div className={`bg-white border-l-4 border-transparent pl-5 py-5 transition-all rounded-r-xl hover:shadow-md ${activeMenu === block.id ? `border-${themeColor.value}-500 shadow-lg bg-gray-50/40` : 'hover:border-gray-300'}`}>
+              <div className="flex justify-between items-start gap-4 mb-3">
+                <div className="flex items-center gap-3 flex-1">
+                  {BlockIcon && (
+                    <div className="p-2 bg-gray-100 rounded-lg text-gray-600 flex-shrink-0">
+                      <BlockIcon size={18} />
+                    </div>
+                  )}
+                  <input className="flex-1 text-base font-semibold text-gray-900 border-none focus:ring-0 p-0 bg-transparent placeholder-gray-400" value={block.content} onChange={(e) => updateBlock(block.id, { content: e.target.value })} onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }} placeholder="Question label..." />
+                </div>
+                {block.system && <span className="text-[11px] uppercase font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md ml-2 whitespace-nowrap border border-teal-200">Required</span>}
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4 mr-6">
                 {renderGenericInput(block, themeColor.value)}
 
                 {/* Specific Editor Controls for Multiple Choice/Checkboxes to add options */}
                 {(block.type === 'multiple_choice' || block.type === 'checkboxes' || block.type === 'dropdown') && (
-                  <button onClick={() => updateBlock(block.id, { options: [...block.options, `Option ${block.options.length + 1}`] })} className={`text-xs text-${themeColor.value}-600 font-medium hover:underline flex items-center gap-1 mt-2`}><Plus size={12} /> Add option</button>
+                  <button onClick={() => updateBlock(block.id, { options: [...block.options, `Option ${block.options.length + 1}`] })} className={`text-xs text-${themeColor.value}-600 font-semibold hover:text-${themeColor.value}-700 flex items-center gap-2 mt-2 transition-colors`}><Plus size={14} /> Add option</button>
+                )}
+
+                {/* Placeholder/Helper Text Editor - Always visible for input and special blocks */}
+                {(block.group === 'Input' || block.group === 'Special') && !['divider', 'spacer', 'columns_2'].includes(block.type) && (
+                  <div className="mt-2 pt-3 border-t border-gray-100">
+                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Placeholder Text</label>
+                    <input 
+                      className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg focus:ring-2 focus:ring-offset-0 focus:border-gray-200 bg-white transition-all placeholder-gray-400" 
+                      value={block.placeholder || ''} 
+                      onChange={(e) => updateBlock(block.id, { placeholder: e.target.value })} 
+                      onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }}
+                      placeholder="e.g. Enter your answer here..." 
+                    />
+                  </div>
                 )}
               </div>
 
-              {/* Helper Text / Placeholder Editor */}
-              {activeMenu === block.id && block.group === 'Input' && (
-                <input className="w-full mt-2 text-xs text-gray-500 border-none focus:ring-0 p-0 bg-transparent placeholder-gray-300 italic" value={block.placeholder || ''} onChange={(e) => updateBlock(block.id, { placeholder: e.target.value })} placeholder="Add placeholder text..." />
-              )}
-
-              <div className="mt-4 flex items-center justify-end opacity-0 group-hover:opacity-100 gap-2 transition-opacity">
+              <div className="mt-5 flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                 {!isBasicText && block.group !== 'Layout' && (
-                  <div className="flex items-center gap-2 mr-4 border-r border-gray-100 pr-4">
-                    <label className="text-xs flex items-center gap-2 text-gray-500 cursor-pointer select-none">
-                      <input type="checkbox" checked={block.required} onChange={(e) => updateBlock(block.id, { required: e.target.checked })} disabled={block.system} className={`rounded border-gray-300 text-${themeColor.value}-600 focus:ring-${themeColor.value}-500`} />
+                  <div className="flex items-center gap-2 mr-3 border-r border-gray-200 pr-3">
+                    <label className="text-xs flex items-center gap-2.5 text-gray-600 cursor-pointer select-none font-medium">
+                      <input type="checkbox" checked={block.required} onChange={(e) => updateBlock(block.id, { required: e.target.checked })} disabled={block.system} className={`rounded border-gray-300 text-${themeColor.value}-600 focus:ring-${themeColor.value}-500 cursor-pointer`} />
                       Required
                     </label>
                   </div>
                 )}
-                <button onClick={() => deleteBlock(block.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete Block"><Trash2 size={16} /></button>
+                <button onClick={() => deleteBlock(block.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete Block"><Trash2 size={16} /></button>
               </div>
             </div>
           )}
@@ -369,33 +415,33 @@ export default function FormsPage() {
   };
 
   const renderPreview = () => (
-    <div className={`max-w-2xl mx-auto bg-white rounded-2xl shadow-xl min-h-[600px] border border-gray-100 animate-in fade-in duration-300 overflow-hidden ${themeFont.value}`}>
-      <div className="h-40 bg-gray-100 w-full relative">
-        {coverImage ? <img src={coverImage} alt="Cover" className="w-full h-full object-cover" /> : <div className={`w-full h-full bg-gradient-to-r from-${themeColor.value}-500/20 to-gray-100`}></div>}
-        {logo && <div className="absolute -bottom-8 left-8 w-20 h-20 bg-white rounded-xl shadow-md p-1"><img src={logo} alt="Logo" className="w-full h-full object-contain rounded-lg" /></div>}
+    <div className={`max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl min-h-[600px] border border-gray-200 animate-in fade-in duration-300 overflow-hidden ${themeFont.value}`}>
+      <div className="h-48 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 w-full relative">
+        {coverImage ? <img src={coverImage} alt="Cover" className="w-full h-full object-cover" /> : <div className={`w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700`}></div>}
+        {logo && <div className="absolute -bottom-10 left-8 w-24 h-24 bg-white rounded-2xl shadow-xl p-1.5 border border-gray-100"><img src={logo} alt="Logo" className="w-full h-full object-contain rounded-xl" /></div>}
       </div>
 
-      <div className="p-8 mt-4">
+      <div className="p-12 mt-6">
         {blocks.map((block) => {
           const isBasicText = ['text', 'heading_1', 'heading_2', 'heading_3', 'quote', 'callout'].includes(block.type);
           return (
-            <div key={block.id} className="mb-6">
+            <div key={block.id} className="mb-8">
               {isBasicText || block.isTitle ? (
                 <div className={`
-                        ${block.type === 'heading_1' || block.isTitle ? 'text-3xl font-bold text-gray-900 mb-4' : ''}
-                        ${block.type === 'heading_2' ? 'text-xl font-bold text-gray-800 mb-3' : ''}
+                        ${block.type === 'heading_1' || block.isTitle ? 'text-4xl font-bold text-gray-900 mb-4 leading-tight' : ''}
+                        ${block.type === 'heading_2' ? 'text-2xl font-bold text-gray-800 mb-3 leading-snug' : ''}
                         ${block.type === 'heading_3' ? 'text-lg font-semibold text-gray-800 mb-2' : ''}
-                        ${block.type === 'quote' ? 'text-lg italic border-l-4 border-gray-300 pl-4 py-2 text-gray-600 my-4' : ''}
-                        ${block.type === 'callout' ? 'bg-gray-50 p-4 rounded-lg text-gray-700 my-4' : ''}
-                        ${block.type === 'text' && !block.isTitle ? 'text-base text-gray-600' : ''}
+                        ${block.type === 'quote' ? 'text-lg italic border-l-4 border-gray-400 pl-6 py-2 text-gray-700 my-6 font-normal' : ''}
+                        ${block.type === 'callout' ? 'bg-blue-50 border border-blue-200 p-5 rounded-xl text-gray-800 my-6 font-medium' : ''}
+                        ${block.type === 'text' && !block.isTitle ? 'text-base text-gray-700 leading-relaxed' : ''}
                     `}>
                   {block.content}
                 </div>
               ) : (
                 <div>
                   {block.type !== 'divider' && block.type !== 'spacer' && (
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">
-                      {block.content} {block.required && <span className="text-red-500">*</span>}
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      {block.content} {block.required && <span className="text-red-500 font-bold">*</span>}
                     </label>
                   )}
 
@@ -425,7 +471,7 @@ export default function FormsPage() {
             </div>
           )
         })}
-        <button className={`w-full bg-gradient-to-r from-teal-400 to-emerald-400 text-white font-bold py-3 rounded-xl mt-4 hover:shadow-lg hover:opacity-95 transition-all`}>
+        <button className={`w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold py-3.5 rounded-xl mt-8 hover:shadow-lg hover:opacity-95 transition-all border border-teal-600 text-base`}>
           Submit Registration
         </button>
       </div>
@@ -433,28 +479,26 @@ export default function FormsPage() {
   );
 
   return (
-    <div className={`h-full flex flex-col animate-fade-in  backdrop-blur-sm relative ${themeFont.value}`}>
-      <header className="h-16 border-b border-gray-100 flex items-center justify-between px-6  z-20">
+    <div className={`h-full flex flex-col animate-fade-in  backdrop-blur-sm relative ${themeFont.value}`} onKeyDown={(e) => { if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); } }}>
+      <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-8 shadow-sm z-20">
         <div className="flex items-center gap-4">
-          <Link href="/events" className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+          <Link href="/events" className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-all">
             <ArrowLeft size={20} />
           </Link>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Registration Form</h1>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <p>Create your registration form</p>
-            </div>
+            {/* <p className="text-xs text-gray-500 font-medium">Create your registration form</p> */}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex p-1 bg-gray-100 rounded-lg mr-2">
-            <button onClick={() => setView('build')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${view === 'build' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>Build</button>
-            <button onClick={() => setView('preview')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${view === 'preview' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>Preview</button>
+        <div className="flex items-center gap-4">
+          <div className="flex p-1.5 bg-gray-100 rounded-xl border border-gray-200">
+            <button onClick={() => setView('build')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${view === 'build' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-600 hover:text-gray-900'}`}>Build</button>
+            <button onClick={() => setView('preview')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${view === 'preview' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-600 hover:text-gray-900'}`}>Preview</button>
           </div>
-          <button onClick={() => setShowDesignPanel(!showDesignPanel)} className={`p-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors ${showDesignPanel ? 'bg-gray-50 border-gray-300 ring-2 ring-gray-100' : ''}`} title="Design & Branding"><Palette size={18} /></button>
-          <button onClick={saveDraft} className={`px-4 py-2 rounded-xl border border-${themeColor.value}-200 text-${themeColor.value}-700 font-medium hover:bg-${themeColor.value}-50 transition-colors flex items-center gap-2 text-sm`}><Save size={16} /> Save Draft</button>
+          <button onClick={() => setShowDesignPanel(!showDesignPanel)} className={`p-2.5 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-100 transition-all ${showDesignPanel ? 'bg-gray-100 border-gray-400' : ''}`} title="Design & Branding"><Palette size={18} /></button>
+          <button onClick={saveDraft} className={`px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all flex items-center gap-2 text-sm`}><Save size={16} /> Save</button>
           <Link href="/create-event/upload">
-            <button className={`px-6 py-2 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-400 text-white font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all flex items-center gap-2 text-sm`}>Next Step <ArrowRight size={16} /></button>
+            <button className={`px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold shadow-lg hover:shadow-xl hover:opacity-90 transition-all flex items-center gap-2 text-sm border border-teal-600`}>Next <ArrowRight size={16} /></button>
           </Link>
         </div>
       </header>
@@ -463,17 +507,17 @@ export default function FormsPage() {
         <div className={`flex-1 overflow-y-auto custom-scrollbar p-0 transition-all ${showDesignPanel ? 'mr-0' : ''}`}>
           {view === 'build' ? (
             <div className="max-w-3xl mx-auto py-12 px-12 min-h-full cursor-text pb-40">
-              <div className="mb-10 group relative rounded-2xl border-2 border-dashed border-gray-200 hover:border-gray-300 transition-colors bg-gray-50/50 p-6 flex flex-col items-center justify-center min-h-[160px]">
-                {coverImage ? <div className="absolute inset-0 w-full h-full"><img src={coverImage} alt="Cover" className="w-full h-full object-cover rounded-2xl opacity-80 group-hover:opacity-60 transition-opacity" /><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="bg-white/90 px-4 py-2 rounded-lg text-sm font-medium shadow-sm">Change Cover Image</span></div></div> : <div className="flex flex-col items-center text-gray-400"><ImageIcon size={32} className="mb-2" /><span className="font-medium">Add Cover Image</span></div>}
+              <div className="mb-12 group relative rounded-2xl border-2 border-dashed border-gray-300 hover:border-gray-400 transition-all bg-gradient-to-br from-gray-50 to-white p-8 flex flex-col items-center justify-center min-h-[180px] shadow-sm hover:shadow-md">
+                {coverImage ? <div className="absolute inset-0 w-full h-full"><img src={coverImage} alt="Cover" className="w-full h-full object-cover rounded-xl opacity-75 group-hover:opacity-60 transition-opacity" /><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="bg-white/95 px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg">Change Cover Image</span></div></div> : <div className="flex flex-col items-center text-gray-400"><ImageIcon size={36} className="mb-3" /><span className="font-semibold text-gray-600">Add Cover Image</span><span className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</span></div>}
                 <input type="file" accept="image/*" onChange={handleCoverUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                <div className="absolute -bottom-6 left-8 w-20 h-20 bg-white rounded-xl shadow-md border border-gray-100 flex items-center justify-center overflow-hidden z-10 group/logo cursor-pointer">{logo ? <img src={logo} alt="Logo" className="w-full h-full object-contain" /> : <div className="bg-gray-100 w-full h-full flex items-center justify-center text-gray-300"><Upload size={16} /></div>}<input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /></div>
+                <div className="absolute -bottom-8 left-8 w-24 h-24 bg-white rounded-2xl shadow-lg border-4 border-white flex items-center justify-center overflow-hidden z-10 group/logo cursor-pointer hover:shadow-xl transition-shadow">{logo ? <img src={logo} alt="Logo" className="w-full h-full object-contain" /> : <div className="bg-gray-100 w-full h-full flex items-center justify-center text-gray-300"><Upload size={18} /></div>}<input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /></div>
               </div>
 
               {blocks.map((block, idx) => renderBlockEditor(block, idx))}
 
-              <div className="mt-8 flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity justify-center py-8">
+              <div className="mt-12 flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity justify-center py-8">
                 <div className="relative">
-                  <button onClick={() => setActiveMenu(activeMenu === 'bottom' ? null : 'bottom')} className={`flex items-center gap-2 px-4 py-2 text-black rounded-full bg-cyan-300 border border-gray-200 shadow-sm hover:text-black hover:border-gray-600 transition-all`}><Plus size={16} /> Add Block</button>
+                  <button onClick={() => setActiveMenu(activeMenu === 'bottom' ? null : 'bottom')} className={`flex items-center gap-2.5 px-5 py-3 text-sm font-semibold text-white rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 border border-teal-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200`}><Plus size={18} /> Add Block</button>
                   {activeMenu === 'bottom' && <BlockMenu onSelect={(type) => addBlock(type, blocks.length - 1)} onClose={() => setActiveMenu(null)} />}
                 </div>
               </div>
@@ -484,16 +528,16 @@ export default function FormsPage() {
         </div>
 
         {/* Design Sidebar - now absolutely positioned on the right */}
-        <div className={`w-80 border-l border-gray-100 bg-white shadow-xl transform transition-transform duration-300 absolute right-0 top-0 bottom-0 z-30 ${showDesignPanel ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-bold text-gray-900">Design & Branding</h3>
-            <button onClick={() => setShowDesignPanel(false)} className="text-gray-400 hover:text-gray-600"><ArrowRight size={18} /></button>
+        <div className={`w-80 border-l border-gray-200 bg-white shadow-2xl transform transition-transform duration-300 absolute right-0 top-0 bottom-0 z-30 ${showDesignPanel ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+            <h3 className="font-bold text-gray-900 text-lg">Design & Branding</h3>
+            <button onClick={() => setShowDesignPanel(false)} className="text-gray-400 hover:text-gray-600 transition-colors"><ArrowRight size={18} /></button>
           </div>
-          <div className="p-6 space-y-8">
+          <div className="p-6 space-y-8 overflow-y-auto max-h-[calc(100vh-120px)]">
 
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 block">Typography</label>
-              <div className="space-y-2">{FONTS.map(f => <button key={f.value} onClick={() => setThemeFont(f)} className={`w-full p-3 rounded-xl border text-left text-sm transition-all ${themeFont.value === f.value ? `border-${themeColor.value}-500 bg-${themeColor.value}-50 text-${themeColor.value}-700` : 'border-gray-200 hover:border-gray-300'}`}><span className={f.value}>{f.name}</span></button>)}</div>
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-4 block">Typography</label>
+              <div className="space-y-2">{FONTS.map(f => <button key={f.value} onClick={() => setThemeFont(f)} className={`w-full p-3.5 rounded-xl border text-left text-sm font-medium transition-all ${themeFont.value === f.value ? `border-teal-500 bg-teal-50 text-teal-700` : 'border-gray-200 hover:border-gray-300 text-gray-700'}`}><span className={f.value}>{f.name}</span></button>)}</div>
             </div>
           </div>
         </div>

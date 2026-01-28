@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-export default function TrendChart({ events = [] }) {
+export function TrendChart({ events = [] }) {
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [timeRange, setTimeRange] = useState("Last 6 Months");
@@ -91,7 +91,7 @@ export default function TrendChart({ events = [] }) {
             </div>
 
             {/* Main Visualizer Area */}
-            <div className="relative flex-1 mb-4">
+            <div className="relative flex-1 mb-3">
                 <div className="absolute left-0 h-full w-8 flex flex-col justify-between text-[10px] font-bold text-black pb-4 pointer-events-none opacity-60">
                     <span>500</span>
                     <span>400</span>
@@ -138,7 +138,7 @@ export default function TrendChart({ events = [] }) {
                         )}
 
                         <path d={areaPath} fill="url(#areaGrad)" className="transition-all duration-1000 ease-in-out" />
-                        <path d={linePath} fill="none" stroke="url(#lineGrad)" strokeWidth="1" strokeLinecap="round" className="transition-all duration-1000 ease-in-out" />
+                        <path d={linePath} fill="none" stroke="url(#lineGrad)" strokeWidth="0.4" strokeLinecap="round" className="transition-all duration-1000 ease-in-out" />
 
                         {coords.map((p, i) => (
                             <g
@@ -162,7 +162,7 @@ export default function TrendChart({ events = [] }) {
                                 {hoveredIndex === i && dataPoints[i] > 0 && (
                                     <g className="pointer-events-none">
                                         <rect x={p.x - 7} y={p.y - 16} width="14" height="10" rx="3" fill="white" />
-                                        <text x={p.x} y={p.y - 9} fontSize="2" fill="#30c2cc" textAnchor="middle" fontWeight="bold">
+                                        <text x={p.x} y={p.y - 9} fontSize="4" fill="#30c2cc" textAnchor="middle" fontWeight="bold">
                                             {dataPoints[i]}
                                         </text>
                                         <path d={`M ${p.x - 2},${p.y - 5} L ${p.x},${p.y - 2} L ${p.x + 2},${p.y - 5} Z`} fill="#30c2cc" />
@@ -204,3 +204,5 @@ export function App() {
         </div>
     );
 }
+
+export default TrendChart;

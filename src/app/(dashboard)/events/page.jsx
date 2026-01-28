@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from "react";
-import { Search, Filter, Plus, MoreHorizontal } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Filter, Plus, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import EventHeader from "@/components/dashboard/EventHeader";
+import { getPublishedEvents } from "@/utils/publishEvent";
 
 export default function EventsPage() {
     const [events, setEvents] = useState([
@@ -77,10 +78,50 @@ export default function EventsPage() {
 
     const [openMenuId, setOpenMenuId] = useState(null);
 
+    // Load published events from localStorage on mount
+    useEffect(() => {
+        const publishedEvents = getPublishedEvents();
+        
+        if (publishedEvents.length > 0) {
+            // Convert published events to table format
+            const formattedPublishedEvents = publishedEvents.map((event, idx) => ({
+                id: event.id,
+                name: event.eventName,
+                date: new Date(event.dateTime).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+                time: new Date(event.dateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                type: "Event",
+                registrations: event.registrationCount || 0,
+                status: event.status === 'active' ? 'Published' : event.status,
+                active: event.status === 'active',
+                image: event.resources?.coverImage || "https://images.unsplash.com/photo-1540575467063-178a50937178?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+                description: event.description,
+                location: event.location,
+                isPublished: true,
+                eventData: event
+            }));
+            
+            // Combine published events with mock data
+            setEvents(prev => [...formattedPublishedEvents, ...prev]);
+        }
+    }, []);
+
     const handleToggleActive = (id) => {
         setEvents(events.map(event =>
             event.id === id ? { ...event, active: !event.active } : event
         ));
+    };
+
+    const handleDeleteEvent = (id) => {
+        if (confirm('Are you sure you want to delete this event?')) {
+            setEvents(events.filter(event => event.id !== id));
+            
+            // Also remove from localStorage
+            const publishedEvents = getPublishedEvents();
+            const updated = publishedEvents.filter(e => e.id !== id);
+            localStorage.setItem('publishedEvents', JSON.stringify(updated));
+            
+            setOpenMenuId(null);
+        }
     };
 
     const handleStatusChange = (id, newStatus) => {
@@ -234,7 +275,7 @@ export default function EventsPage() {
                                                                 onClick={() => handleStatusChange(event.id, 'Active')}
                                                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                                                             >
-                                                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                                                <span className="w-2 h-2 rounded-full bg-blue-50    0"></span>
                                                                 Active
                                                             </button>
                                                             <button
@@ -243,6 +284,14 @@ export default function EventsPage() {
                                                             >
                                                                 <span className="w-2 h-2 rounded-full bg-red-500"></span>
                                                                 Closed
+                                                            </button>
+                                                            <div className="border-t border-gray-100 my-1"></div>
+                                                            <button
+                                                                onClick={() => handleDeleteEvent(event.id)}
+                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                                            >
+                                                                <span className="w-2 h-2 rounded-full bg-red-600"></span>
+                                                                Delete
                                                             </button>
                                                         </div>
                                                     )}

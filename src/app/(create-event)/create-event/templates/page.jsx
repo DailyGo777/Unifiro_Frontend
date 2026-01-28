@@ -1,32 +1,54 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from "next/image";
-import { LayoutTemplate, Plus, X, ArrowLeft } from "lucide-react";
-
-// Mock Link component for standalone preview environment
-const Link = ({ children, href, className }) => (
-    <a href="#" onClick={(e) => e.preventDefault()} className={className}>{children}</a>
-);
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import TemplateLanding from "@/components/create-event/TemplateSection/TemplateLanding";
+import TemplateGallery from "@/components/create-event/TemplateSection/TemplateGallery";
+import TemplateBuilder from "@/components/create-event/TemplateSection/TemplateBuilder";
 
 const TemplatesPage = () => {
     // view can be 'landing' or 'gallery'
     const [view, setView] = useState('landing');
     const [activeCategory, setActiveCategory] = useState("All");
+    const [personalTemplates, setPersonalTemplates] = useState([]);
 
     const categories = ["All", "Creators", "Product", "Marketing", "Personal"];
     const gradientClass = "bg-gradient-to-r from-orange-400 via-lime-400 to-green-400";
 
-    const templates = [
+    const defaultTemplates = [
         { title: "Registration Form", category: "Personal", color: "bg-white", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=500" },
         { title: "Event Registration", category: "Marketing", color: "bg-purple-100", image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=500" },
         { title: "Party RSVP Form", category: "Personal", color: "bg-red-50", image: "https://images.unsplash.com/photo-1530103862676-de3c9da59af7?auto=format&fit=crop&q=80&w=500" },
         { title: "Wedding Form", category: "Personal", color: "bg-orange-50", image: "https://images.unsplash.com/photo-1519225468063-e7296d955fa2?auto=format&fit=crop&q=80&w=500" },
     ];
 
+    // Load personal templates from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('personalTemplates');
+        if (saved) {
+            try {
+                setPersonalTemplates(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to load personal templates", e);
+            }
+        }
+    }, []);
+
+    const templates = [...personalTemplates, ...defaultTemplates];
+
     const filteredTemplates = activeCategory === "All"
         ? templates
         : templates.filter(t => t.category === activeCategory);
+
+    const deleteTemplate = (id) => {
+        if (confirm('Are you sure you want to delete this template?')) {
+            const updated = personalTemplates.filter(t => t.id !== id);
+            setPersonalTemplates(updated);
+            localStorage.setItem('personalTemplates', JSON.stringify(updated));
+        }
+    };
 
     return (
         <div className="min-h-screen overflow-x-hidden">
@@ -45,7 +67,7 @@ const TemplatesPage = () => {
                         </div>
                         {/* card1 */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl pb-24">
-                            <div onClick={() => setView('gallery')} className="group cursor-pointer">
+                            <div onClick={() => setView('builder')} className="group cursor-pointer">
                                 <div className="h-100 rounded-[24px] bg-gradient-to-br from-[#A0E8D9] via-[#85DABF] to-[#CDF4A4] p-1 shadow-lg transition-all duration-500 transform group-hover:-translate-y-3 group-hover:shadow-2xl relative overflow-hidden flex items-center justify-center">
                                     <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     <Plus className="w-24 h-24 text-white drop-shadow-md" strokeWidth={1.5} />
@@ -91,90 +113,21 @@ const TemplatesPage = () => {
                 )}
 
                 {/* 2. GALLERY VIEW */}
-
                 {view === 'gallery' && (
-                    <div className="animate-in fade-in zoom-in-95 duration-500">
-                        <div className="flex items-center justify-between mb-0 mt-0">
-                            <button
-                                onClick={() => setView('landing')}
-                                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-medium group"
-                            >
-                                <div className="p-2 rounded-full bg-white shadow-sm border border-gray-100 group-hover:bg-gray-50">
-                                    <ArrowLeft className="w-5 h-5" />
-                                </div>
-                                {/* <span>Back to flow</span> */}
-                            </button>
-
-                            <button
-                                onClick={() => setView('landing')}
-                                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                            >
-                                <X className="w-6 h-6 text-gray-400" />
-                            </button>
-                        </div>
-                        <div className="text-center mb-6">
-                            <h2 className="text-3xl font-bold md:text-4xl text-gray-900 tracking-tight">Explore form & survey templates</h2>
-                            <p className="text-gray-800 mt-3 max-w-xl mx-auto">
-                                Explore, pick, and customize templates to your needs. <br />
-                                Discover how to <span className="underline cursor-pointer">use templates</span> , <span className="underline cursor-pointer">create your own</span> or <span className="underline cursor-pointer">submit your template</span> to the gallery.
-                            </p>
-                        </div>
-
-                        {/* Navigation  */}
-
-                        <div className="flex justify-center flex-wrap gap-3 mb-6">
-                            {categories.map((cat) => {
-                                const isActive = activeCategory === cat;
-                                return (
-                                    <button
-                                        key={cat}
-                                        onClick={() => setActiveCategory(cat)}
-                                        className={`rounded-full transition-all duration-300 focus:outline-none ${isActive
-                                            ? `p-[1.5px] ${gradientClass} shadow-md scale-105`
-                                            : "p-[1.5px] bg-transparent hover:scale-105"
-                                            }`}
-                                    >
-                                        <span className={`block px-5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${isActive
-                                            ? "bg-white text-gray-900"
-                                            : "bg-transparent text-gray-600 hover:text-gray-900"
-                                            }`}>
-                                            {cat}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-
-
-                        {/* Templates Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-24">
-                            {filteredTemplates.map((template, idx) => (
-                                <Link href="#" key={idx} className="group block">
-                                    <div className="bg-white rounded-[20px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden h-96 flex flex-col">
-                                        <div className="h-5/6 overflow-hidden relative bg-gray-50">
-                                            <img
-                                                src={template.image}
-                                                alt={template.title}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                            />
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                            <div className="absolute top-4 left-4">
-                                                <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold text-gray-600 uppercase">
-                                                    {template.category}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="h-1/6 flex flex-col items-center justify-center px-6 bg-white z-10">
-                                            <h3 className="text-base font-bold text-gray-800 group-hover:text-orange-500 transition-colors text-center">
-                                                {template.title}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
+                    <TemplateGallery
+                        onBack={() => setView('landing')}
+                        activeCategory={activeCategory}
+                        onCategoryChange={setActiveCategory}
+                        categories={categories}
+                        filteredTemplates={filteredTemplates}
+                        onDelete={deleteTemplate}
+                        personalTemplates={personalTemplates}
+                        gradientClass={gradientClass}
+                    />
+                )}
+                {/* 3. BUILDER VIEW */}
+                {view === 'builder' && (
+                    <TemplateBuilder onBack={() => setView('landing')} />
                 )}
             </div>
         </div>

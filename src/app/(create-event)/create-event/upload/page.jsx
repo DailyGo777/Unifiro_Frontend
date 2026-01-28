@@ -1,11 +1,32 @@
 "use client";
 
-import { CloudUpload, FolderUp, FileUp, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import DropZone from "@/components/create-event/UploadSection/DropZone";
+import FilesList from "@/components/create-event/UploadSection/FilesList";
 
 export default function UploadPage() {
     const [isDragging, setIsDragging] = useState(false);
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+
+    // Load uploaded files from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('uploadedFiles');
+        if (saved) {
+            try {
+                setUploadedFiles(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to load uploaded files", e);
+            }
+        }
+    }, []);
+
+    // Save uploaded files to localStorage
+    const saveFiles = (files) => {
+        setUploadedFiles(files);
+        localStorage.setItem('uploadedFiles', JSON.stringify(files));
+    };
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -19,44 +40,129 @@ export default function UploadPage() {
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
-        // Handle files here
+        const items = e.dataTransfer.items;
+        if (items) {
+            handleFiles(items);
+        }
+    };
+
+    const handleFiles = (items) => {
+        const newFiles = [];
+        let processedCount = 0;
+
+        // Process each item (file or folder)
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === 'file') {
+                const file = item.getAsFile();
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        newFiles.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            createdAt: new Date().toISOString(),
+                            isFolder: false
+                        });
+                        processedCount++;
+                        if (processedCount === items.length) {
+                            saveFiles([...uploadedFiles, ...newFiles]);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        // If no files were found, save the empty array
+        if (processedCount === 0 && items.length > 0) {
+            saveFiles([...uploadedFiles, ...newFiles]);
+        }
+    };
+
+    const handleFileUpload = (e) => {
+        const files = e.target.files;
+        if (files) {
+            const newFiles = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                newFiles.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    createdAt: new Date().toISOString(),
+                    isFolder: false
+                });
+            }
+            saveFiles([...uploadedFiles, ...newFiles]);
+        }
+    };
+
+    const handleFolderUpload = (e) => {
+        const files = e.target.files;
+        if (files) {
+            const newFiles = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const folderPath = file.webkitRelativePath || file.name;
+                const folderName = folderPath.split('/')[0];
+                
+                newFiles.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    folderPath: folderPath,
+                    createdAt: new Date().toISOString(),
+                    isFolder: false
+                });
+            }
+            saveFiles([...uploadedFiles, ...newFiles]);
+        }
+    };
+
+    const deleteFile = (id) => {
+        const updated = uploadedFiles.filter(f => f.id !== id);
+        saveFiles(updated);
+    };
+
+    const formatFileSize = (bytes) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
     return (
-        <div className="h-full flex flex-col items-center justify-center p-8 animate-fade-in relative">
+        <div className="h-full flex flex-col justify-centerp-8 ml-25 animate-fade-in relative py-12 px-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">Upload Content</h1>
 
-            {/* Drop Zone */}
-            <div
-                className={`w-full max-w-4xl h-96 border-3 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all duration-300 bg-white/50 backdrop-blur-sm
-            ${isDragging ? "border-teal-500 bg-teal-50/50 scale-[1.02]" : "border-gray-300 hover:border-teal-400"}`}
+            {/* Drop Zone Component */}
+            <DropZone
+                isDragging={isDragging}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-            >
-                <div className="w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg mb-6 animate-bounce-slow">
-                    <CloudUpload className="text-white w-16 h-16" />
-                </div>
+                onFileUpload={handleFileUpload}
+                onFolderUpload={handleFolderUpload}
+            />
 
-                <h2 className="text-2xl font-semibold text-gray-800 mb-2">Drop your content here or</h2>
-                <p className="text-gray-500 mb-8">Support for images, videos, and documents</p>
-
-                <div className="flex gap-4">
-                    <button className="px-6 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 shadow-sm transition-all flex items-center gap-2 font-medium text-gray-700">
-                        <FileUp size={20} />
-                        Upload files
-                    </button>
-                    <button className="px-6 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 shadow-sm transition-all flex items-center gap-2 font-medium text-gray-700">
-                        <FolderUp size={20} />
-                        Upload folder
-                    </button>
-                </div>
-            </div>
+            {/* Files List Component */}
+            <FilesList
+                uploadedFiles={uploadedFiles}
+                onDelete={deleteFile}
+                onClearAll={() => saveFiles([])}
+                formatFileSize={formatFileSize}
+            />
 
             {/* Navigation */}
-            <div className="mt-12 w-full max-w-4xl flex justify-end">
+            <div className="mt-auto w-full max-w-4xl flex justify-end pt-8">
                 <Link href="/create-event/settings">
-                    <button className="px-8 py-3 rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-400 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                    <button className="px-8 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
                         Continue to Settings
                         <ArrowRight size={20} />
                     </button>
