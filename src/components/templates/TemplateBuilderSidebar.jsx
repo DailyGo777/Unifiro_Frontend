@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { kanLayout } from "@/data/templates/layouts";
 import {
     Search,
     LayoutTemplate,
@@ -13,6 +14,7 @@ import {
     ChevronDown,
     Box,
     Layout,
+    X,
     Music,
     Video,
     Twitter,
@@ -40,73 +42,12 @@ import {
 } from "lucide-react";
 
 // --- Template Data Presets ---
-const kanLayout = [
-    // Top Logos (Placeholder)
-    { id: 'logo-1', type: 'image', label: 'Logos', x: 50, y: 20, w: 350, h: 60, zIndex: 10, properties: { src: 'https://placehold.co/400x80/white/png?text=Logos+Here' } },
-
-    // Hero Section (Split Layout)
-    // Dark Overlay implementation via 'hero' type with specific color
-    {
-        id: 'hero-txt', type: 'hero', label: 'Hero Text', x: 0, y: 0, w: 500, h: 550, zIndex: 1, properties: {
-            title: 'KARNATAKA ACCELERATION NETWORK (KAN)',
-            subtitle: 'COHORT 2 | MANGALURU CLUSTER',
-            color: '#000000' // Dark background 
-        }
-    },
-    { id: 'hero-img', type: 'image', label: 'Hero Image', x: 500, y: 0, w: 500, h: 550, zIndex: 1, properties: { src: 'https://placehold.co/600x800/orange/white?text=Tower+Image' } },
-
-    // Floating Info Cards
-    { id: 'card-1', type: 'icon-card', label: 'Date', x: 50, y: 480, w: 220, h: 120, zIndex: 20, properties: { icon: 'calendar', label: 'Date', text: 'JANUARY 16, 2026' } },
-    { id: 'card-2', type: 'icon-card', label: 'Time', x: 290, y: 480, w: 220, h: 120, zIndex: 20, properties: { icon: 'clock', label: 'Time', text: '9AM - 4PM' } },
-    { id: 'card-3', type: 'icon-card', label: 'Location', x: 530, y: 480, w: 300, h: 120, zIndex: 20, properties: { icon: 'map', label: 'Location', text: 'University Auditorium, Mangalore' } },
-
-    // About Section
-    {
-        id: 'about-1', type: 'section', label: 'About', x: 50, y: 650, w: 900, h: 200, zIndex: 2, properties: {
-            title: 'ABOUT THE PROGRAM',
-            subtitle: 'To create a national platform where all the fisheries stakeholders come together...',
-            color: '#ffffff'
-        }
-    },
-
-    // Feature Section (Image Left, Text Right)
-    { id: 'feat-img', type: 'image', label: 'Feature Image', x: 50, y: 880, w: 400, h: 300, zIndex: 3, properties: { src: 'https://placehold.co/400x300/e2e8f0/64748b?text=Illustration' } },
-    {
-        id: 'feat-txt', type: 'section', label: 'About Logic', x: 480, y: 880, w: 470, h: 300, zIndex: 3, properties: {
-            title: 'Mission',
-            subtitle: 'Identify ground-level challenges in aquaculture and fisheries.',
-            color: '#ffffff'
-        }
-    },
-
-    // Implementation List
-    {
-        id: 'imp-list', type: 'list', label: 'Implementation', x: 50, y: 1200, w: 900, h: 300, zIndex: 4, properties: {
-            items: [
-                'Industry + Farmers + Hatcheries submit real problems via JSVB portal',
-                'Officials & scientists access the data to analyze problems',
-                'Potential startups & researchers work on these real-world challenges',
-                'Creates a strong Lab-to-Land connection',
-                'Supports funding, innovation, and collaboration'
-            ]
-        }
-    },
-
-    // Footer
-    {
-        id: 'footer', type: 'hero', label: 'Contact', x: 0, y: 1550, w: 1000, h: 200, zIndex: 5, properties: {
-            title: 'Contact Us',
-            subtitle: 'Dr. Ashwath Nayak | 7760570519 | ashwath.nayak@nitte.edu.in',
-            color: '#f97316' // Orange
-        }
-    }
-];
 
 /**
  * Sidebar Component for the Template Builder
  * mimics the "Framer" sidebar style in light mode.
  */
-const TemplateBuilderSidebar = ({ onThemeSelect, onLoadTemplate }) => {
+const TemplateBuilderSidebar = ({ onThemeSelect, onLoadTemplate, onClose }) => {
     const [expandedCategories, setExpandedCategories] = useState({
         Start: true,
         Basics: true,
@@ -146,11 +87,22 @@ const TemplateBuilderSidebar = ({ onThemeSelect, onLoadTemplate }) => {
             <aside className="w-[280px] h-screen bg-white border-r border-gray-200 flex flex-col text-gray-800 font-sans select-none overflow-y-auto">
                 {/* Header / Search */}
                 <div className="p-4 border-b border-gray-100">
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
-                            <LayoutTemplate size={16} className="text-gray-600" />
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
+                                <LayoutTemplate size={16} className="text-gray-600" />
+                            </div>
+                            <div className="text-sm font-semibold">Insert</div>
                         </div>
-                        <div className="text-sm font-semibold">Insert</div>
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="p-1 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
+                                title="Close Sidebar"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
 
                     <div className="relative group">

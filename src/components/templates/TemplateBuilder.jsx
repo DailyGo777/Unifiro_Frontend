@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import TemplateBuilderSidebar from "@/components/create-event/TemplateSection/TemplateBuilderSidebar";
+import TemplateBuilderSidebar from "./TemplateBuilderSidebar";
 import {
     Search, LayoutTemplate, Type, Image as ImageIcon, MousePointer2,
     Menu, CreditCard, ChevronRight, ChevronDown, Box, Layout,
     Twitter, Instagram, Facebook, Table, X, Move, Maximize2,
-    Settings, Eye, Save, Download, HelpCircle, Palette, MousePointer, PaintBucket
+    Settings, Eye, Save, Download, HelpCircle, Palette, MousePointer, PaintBucket,
+    Pencil
 } from 'lucide-react';
+import { useTemplates } from "@/context/TemplatesContext";
 
 // --- Sub-Components ---
 
@@ -29,7 +31,6 @@ const ResizeHandle = ({ position, onMouseDown }) => {
     );
 };
 
-// --- Inline Text Editor ---
 const InlineText = ({ value, onChange, className, style, tagName = 'span', readOnly, placeholder }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [text, setText] = useState(value);
@@ -69,10 +70,15 @@ const InlineText = ({ value, onChange, className, style, tagName = 'span', readO
 
 // --- Main App Component ---
 
-export default function TemplateBuilder({ onBack }) {
-    const [canvasItems, setCanvasItems] = useState([
-        { id: 'init-1', label: 'Simple Navbar', type: 'navigation', x: 50, y: 40, w: 900, h: 70, zIndex: 1, properties: { title: 'EventPro', links: ['Schedule', 'Register'], color: '#ffffff' } }
-    ]);
+export default function TemplateBuilder({ onBack, initialItems, initialName, initialId }) {
+    const { isComponentLibraryOpen, setIsComponentLibraryOpen } = useTemplates();
+    const [canvasItems, setCanvasItems] = useState(initialItems || []);
+    const [templateName, setTemplateName] = useState(initialName || "Untitled Template");
+
+    // Ensure isSidebarOpen is synced with context
+    const isSidebarOpen = isComponentLibraryOpen;
+    const setIsSidebarOpen = setIsComponentLibraryOpen;
+
     const [pageProperties, setPageProperties] = useState({
         backgroundColor: '#ffffff',
         gridVisible: true
@@ -83,8 +89,8 @@ export default function TemplateBuilder({ onBack }) {
 
     const [viewMode, setViewMode] = useState('edit');
     const [isPageSettingsOpen, setIsPageSettingsOpen] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Toggle for Left Sidebar
     const [isSaving, setIsSaving] = useState(false);
+    const [isPublished, setIsPublished] = useState(false);
 
     const canvasRef = useRef(null);
 
@@ -111,15 +117,14 @@ export default function TemplateBuilder({ onBack }) {
         }
 
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left; // Relative to canvas
+        const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        // Map generic sidebar types to specific renderer types
         let rendererType = template.type;
         if (template.type === 'media') rendererType = 'image';
         if (template.type === 'forms') rendererType = 'form-group';
         if (template.type === 'interactive') rendererType = 'icon-card';
-        if (template.type === 'utility') rendererType = 'list'; // or 'grid'
+        if (template.type === 'utility') rendererType = 'list';
 
         const newItem = {
             id: Date.now().toString(),
@@ -146,14 +151,11 @@ export default function TemplateBuilder({ onBack }) {
         if (type === 'header') return { title: 'Header', subtitle: 'Subtitle', color: 'transparent' };
         if (type === 'navigation') return { title: 'Brand', links: ['Home', 'Link'], color: '#ffffff' };
         if (label === 'Hero Section' || type === 'hero') return { title: 'Hero Title', subtitle: 'Hero subtitle description.', color: '#ffffff' };
-
-        // --- Process New Element Types ---
-        if (type === 'media' || label === 'Media') return { src: '' }; // Handled by 'image' renderer if type is updated
+        if (type === 'media' || label === 'Media') return { src: '' };
         if (type === 'forms' || label === 'Forms') return { title: 'Newsletter', label: 'Email', color: '#ffffff' };
         if (type === 'interactive' || label === 'Interactive') return { icon: 'map', label: 'Feature', text: 'Details here' };
         if (type === 'social' || label === 'Social') return { platforms: ['twitter', 'instagram', 'facebook'] };
         if (type === 'utility' || label === 'Utility') return { items: ['Item 1', 'Item 2', 'Item 3'] };
-
         return defaults;
     }
 
@@ -166,8 +168,6 @@ export default function TemplateBuilder({ onBack }) {
         if (selectedId === id) setSelectedId(null);
     };
 
-    // --- Interaction Logic (Resize/Move) ---
-    // (Kept identical logic but ensured it references correct window handling)
     const startResizing = (e, id, position) => {
         e.preventDefault();
         const item = canvasItems.find(i => i.id === id);
@@ -200,32 +200,70 @@ export default function TemplateBuilder({ onBack }) {
         document.addEventListener('mouseup', onMouseUp);
     };
 
-    const themes = {
-        default: { bg: '#ffffff', primary: '#4f46e5' },
-        dark: { bg: '#1a202c', primary: '#667eea' },
-        light: { bg: '#f7fafc', primary: '#4299e1' },
-    };
-
     const applyTheme = (themeName) => {
-        const theme = themes[themeName];
+        const theme = {
+            default: { bg: '#ffffff', primary: '#4f46e5' },
+            dark: { bg: '#1a202c', primary: '#667eea' },
+            light: { bg: '#f7fafc', primary: '#4299e1' },
+        }[themeName];
         if (!theme) return;
         setPageProperties(prev => ({ ...prev, backgroundColor: theme.bg }));
         setCanvasItems(prevItems => prevItems.map(item => {
             const newProps = { ...item.properties };
-            if (['navigation', 'button', 'hero', 'section'].includes(item.type)) {
-                if (item.type === 'button') newProps.color = theme.primary;
-                if (item.type === 'navigation') { }
-            }
-            if (item.type === 'button') { newProps.color = theme.primary; }
+            if (item.type === 'button') newProps.color = theme.primary;
             return { ...item, properties: newProps };
         }));
     };
 
     const loadTemplate = (items) => {
-        // Load a fresh template, replacing current items
         if (window.confirm("Load new template? This will replace your current work.")) {
             setCanvasItems(items.map(i => ({ ...i, id: Date.now() + Math.random().toString() })));
-            setPageProperties({ backgroundColor: '#ffffff', gridVisible: false });
+        }
+    };
+
+    const handlePublish = () => {
+        setIsSaving(true);
+        try {
+            const saved = localStorage.getItem('personalTemplates');
+            const personalTemplates = saved ? JSON.parse(saved) : [];
+
+            let updatedTemplates;
+            if (initialId) {
+                // Update existing
+                updatedTemplates = personalTemplates.map(t => t.id === initialId ? {
+                    ...t,
+                    title: templateName,
+                    items: canvasItems,
+                    updatedAt: new Date().toISOString()
+                } : t);
+            } else {
+                // Create new
+                const newTemplate = {
+                    id: Date.now().toString(),
+                    title: templateName,
+                    category: "Personal",
+                    color: "bg-white",
+                    image: null,
+                    items: canvasItems,
+                    createdAt: new Date().toISOString()
+                };
+                updatedTemplates = [newTemplate, ...personalTemplates];
+            }
+
+            localStorage.setItem('personalTemplates', JSON.stringify(updatedTemplates));
+
+            // Also set as current template for event in case they want to register now
+            localStorage.setItem('selectedTemplateForEvent', JSON.stringify(newTemplate));
+
+            setTimeout(() => {
+                setIsSaving(false);
+                setIsPublished(true);
+                // Don't auto-navigate back yet, let them see the success and choice
+                // if (onBack) onBack(); 
+            }, 1000);
+        } catch (e) {
+            console.error("Failed to save template", e);
+            setIsSaving(false);
         }
     };
 
@@ -256,9 +294,12 @@ export default function TemplateBuilder({ onBack }) {
 
     return (
         <div className="flex h-screen w-full bg-white overflow-hidden font-sans text-slate-900">
-
             <div className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-fit' : 'w-0 overflow-hidden opacity-0'}`}>
-                <TemplateBuilderSidebar onThemeSelect={applyTheme} onLoadTemplate={loadTemplate} />
+                <TemplateBuilderSidebar
+                    onThemeSelect={applyTheme}
+                    onLoadTemplate={loadTemplate}
+                    onClose={() => setIsSidebarOpen(false)}
+                />
             </div>
 
             <main className="flex-1 flex flex-col relative overflow-hidden">
@@ -276,7 +317,12 @@ export default function TemplateBuilder({ onBack }) {
                                 <span className="text-lg">←</span> <span className="text-sm font-medium">Back</span>
                             </button>
                         )}
-                        <h1 className="text-sm font-bold text-gray-900">Event Registration v1</h1>
+                        <input
+                            type="text"
+                            value={templateName}
+                            onChange={(e) => setTemplateName(e.target.value)}
+                            className="text-sm font-bold text-gray-900 bg-transparent border-none outline-none hover:bg-gray-50 px-2 py-1 rounded transition-colors focus:bg-white focus:ring-1 focus:ring-indigo-100"
+                        />
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -291,22 +337,30 @@ export default function TemplateBuilder({ onBack }) {
                         <button onClick={() => setViewMode('preview')} className="px-4 py-1.5 flex items-center gap-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 rounded-lg border border-gray-200 transition-all">
                             <Eye size={16} /> Preview
                         </button>
-                        <button onClick={() => { setIsSaving(true); setTimeout(() => setIsSaving(false), 1000); }} className={`px-6 py-1.5 flex items-center gap-2 text-sm font-bold text-white rounded-lg shadow-lg shadow-indigo-200 transition-all ${isSaving ? 'bg-green-600' : 'bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-0.5'}`}>
-                            {isSaving ? 'PUBLISHED' : 'PUBLISH FORM'}
-                        </button>
+                        {isPublished ? (
+                            <Link
+                                href="/create-event/forms"
+                                className="px-6 py-1.5 flex items-center gap-2 text-sm font-bold text-white rounded-lg bg-green-600 shadow-lg shadow-green-200 transition-all hover:bg-green-700 hover:-translate-y-0.5"
+                            >
+                                <Plus size={16} /> REGISTER EVENT
+                            </Link>
+                        ) : (
+                            <button onClick={handlePublish} className={`px-6 py-1.5 flex items-center gap-2 text-sm font-bold text-white rounded-lg shadow-lg shadow-indigo-200 transition-all ${isSaving ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-0.5'}`}>
+                                {isSaving ? 'PUBLISHING...' : 'PUBLISH FORM'}
+                            </button>
+                        )}
                     </div>
                 </header>
 
-                {/* FULL SCREEN CANVAS AREA */}
                 <div
-                    className="flex-1 overflow-auto relative bg-[#f8f9fa] scroll-smooth"
+                    className="flex-1 overflow-auto relative bg-white scroll-smooth"
                     onClick={() => setSelectedId(null)}
                 >
                     <div
                         ref={canvasRef}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={handleDrop}
-                        className="w-full min-h-full relative transition-all"
+                        className="w-full min-w-[1024px] min-h-[768px] relative transition-all"
                         style={{
                             backgroundColor: pageProperties.backgroundColor,
                             backgroundImage: pageProperties.gridVisible ? 'radial-gradient(#e5e7eb 1px, transparent 1px)' : 'none',
@@ -355,7 +409,6 @@ export default function TemplateBuilder({ onBack }) {
                 </div>
             </main>
 
-            {/* --- Property Sidebar (Pinned) --- */}
             <aside className={`bg-white border-l border-gray-200 flex flex-col z-30 shrink-0 shadow-xl transition-all duration-300 ease-in-out ${(selectedItem || isPageSettingsOpen) ? 'w-[320px] translate-x-0' : 'w-0 translate-x-10 overflow-hidden opacity-0'}`}>
                 {selectedItem ? (
                     <div className="flex flex-col h-full animate-in slide-in-from-right-4 duration-200">
@@ -364,19 +417,17 @@ export default function TemplateBuilder({ onBack }) {
                             <button onClick={() => setSelectedId(null)} className="p-2 hover:bg-white rounded-xl shadow-sm border border-gray-100 text-gray-400 transition-all"><X size={16} /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                            {/* ... Component Properties (Same as before) ... */}
                             <div>
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 block">Layout</label>
                                 <div className="grid grid-cols-2 gap-4">
                                     {[{ l: 'W', k: 'w' }, { l: 'H', k: 'h' }, { l: 'X', k: 'x' }, { l: 'Y', k: 'y' }].map(f => (
                                         <div key={f.k} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2">
                                             <span className="text-[10px] font-bold text-gray-400">{f.l}</span>
-                                            <input type="number" value={Math.round(selectedItem[f.k])} onChange={(e) => updateItem(selectedItem.id, { [f.k]: parseInt(e.target.value) || 0 })} className="w-full bg-transparent text-xs font-bold outline-none" />
+                                            <input type="number" value={Math.round(selectedItem[f.k] || 0)} onChange={(e) => updateItem(selectedItem.id, { [f.k]: parseInt(e.target.value) || 0 })} className="w-full bg-transparent text-xs font-bold outline-none" />
                                         </div>
                                     ))}
                                 </div>
                             </div>
-
                             <div>
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 block">Style & Content</label>
                                 <div className="space-y-4">
@@ -385,17 +436,16 @@ export default function TemplateBuilder({ onBack }) {
                                             <div key={key} className="space-y-2">
                                                 <span className="text-[10px] font-bold text-gray-500 ml-1">Color</span>
                                                 <div className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-xl shadow-sm">
-                                                    <input type="color" value={value} onChange={(e) => updateItem(selectedItem.id, { properties: { ...selectedItem.properties, [key]: e.target.value } })} className="w-8 h-8 rounded cursor-pointer" />
+                                                    <input type="color" value={value || '#ffffff'} onChange={(e) => updateItem(selectedItem.id, { properties: { ...selectedItem.properties, [key]: e.target.value } })} className="w-8 h-8 rounded cursor-pointer" />
                                                     <span className="text-xs font-mono font-bold text-gray-400 uppercase">{value}</span>
                                                 </div>
                                             </div>
                                         );
                                         if (Array.isArray(value)) return null;
-                                        if (key === 'link' || key === 'platforms') return null;
                                         return (
                                             <div key={key} className="space-y-1">
                                                 <span className="text-[10px] font-bold text-gray-500 ml-1 capitalize">{key}</span>
-                                                <input type="text" value={value} onChange={(e) => updateItem(selectedItem.id, { properties: { ...selectedItem.properties, [key]: e.target.value } })} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all shadow-sm" />
+                                                <input type="text" value={value || ''} onChange={(e) => updateItem(selectedItem.id, { properties: { ...selectedItem.properties, [key]: e.target.value } })} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all shadow-sm" />
                                             </div>
                                         )
                                     })}
@@ -416,31 +466,14 @@ export default function TemplateBuilder({ onBack }) {
                             <div>
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 block">Canvas Background</label>
                                 <div className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-xl shadow-sm">
-                                    <div className="relative">
-                                        <PaintBucket size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                        <input
-                                            type="color"
-                                            value={pageProperties.backgroundColor}
-                                            onChange={(e) => setPageProperties(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                                            className="w-full h-10 pl-8 rounded cursor-pointer opacity-0 absolute inset-0 z-10"
-                                        />
-                                        <div className="w-8 h-8 ml-8 rounded border border-gray-100 shadow-sm" style={{ backgroundColor: pageProperties.backgroundColor }}></div>
-                                    </div>
+                                    <input type="color" value={pageProperties.backgroundColor} onChange={(e) => setPageProperties(prev => ({ ...prev, backgroundColor: e.target.value }))} className="w-8 h-8 rounded cursor-pointer" />
                                     <span className="text-xs font-mono font-bold text-gray-400 uppercase flex-1">{pageProperties.backgroundColor}</span>
                                 </div>
                             </div>
-
-                            <div>
-                                <label className="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                                    <span className="text-xs font-bold text-gray-600">Show Grid</span>
-                                    <input
-                                        type="checkbox"
-                                        checked={pageProperties.gridVisible}
-                                        onChange={(e) => setPageProperties(prev => ({ ...prev, gridVisible: e.target.checked }))}
-                                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
-                                    />
-                                </label>
-                            </div>
+                            <label className="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                <span className="text-xs font-bold text-gray-600">Show Grid</span>
+                                <input type="checkbox" checked={pageProperties.gridVisible} onChange={(e) => setPageProperties(prev => ({ ...prev, gridVisible: e.target.checked }))} className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500" />
+                            </label>
                         </div>
                     </div>
                 )}
@@ -449,10 +482,7 @@ export default function TemplateBuilder({ onBack }) {
     );
 }
 
-// --- Renderer (Unchanged logic, just ensure export is valid) ---
 const Renderer = ({ item, onUpdate, isPreview = false, isSidebarPreview = false }) => {
-    // ... Copy exact renderer logic from previous implementation to ensure consistency ...
-    // Using the same switch-case block we refined in Step 306
     const { type, properties, w, h } = item;
     const baseStyle = {
         backgroundColor: (type === 'button' || type === 'social' || type === 'grid') ? 'transparent' : (properties?.color || 'transparent'),
@@ -548,7 +578,6 @@ const Renderer = ({ item, onUpdate, isPreview = false, isSidebarPreview = false 
                     </div>
                 </div>
             );
-
         case 'image':
             return (
                 <div className={`w-full h-full rounded-2xl overflow-hidden bg-gray-100 relative group ${scaleClass}`}>
@@ -562,12 +591,11 @@ const Renderer = ({ item, onUpdate, isPreview = false, isSidebarPreview = false 
                     )}
                 </div>
             );
-
         case 'icon-card':
             return (
                 <div className={`w-full h-full bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm ${scaleClass}`}>
                     <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-                        {properties?.icon === 'calendar' ? <Layout size={14} /> : <Move size={14} />} {/* Placeholder icons logic */}
+                        {properties?.icon === 'calendar' ? <Layout size={14} /> : <Move size={14} />}
                     </div>
                     <div className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">
                         <InlineText value={properties?.label || 'Label'} onChange={v => onUpdate({ label: v })} readOnly={readOnly} />
@@ -577,22 +605,13 @@ const Renderer = ({ item, onUpdate, isPreview = false, isSidebarPreview = false 
                     </div>
                 </div>
             );
-
         case 'list':
             return (
                 <div className={`w-full h-full p-4 ${scaleClass}`}>
                     <ul className="list-disc pl-4 space-y-2">
-                        {properties?.items?.map((item, i) => (
+                        {properties?.items?.map((itemText, i) => (
                             <li key={i} className="text-xs text-gray-600 leading-relaxed">
-                                <InlineText
-                                    value={item}
-                                    onChange={v => {
-                                        const newItems = [...(properties.items || [])];
-                                        newItems[i] = v;
-                                        onUpdate({ items: newItems });
-                                    }}
-                                    readOnly={readOnly}
-                                />
+                                <InlineText value={itemText} onChange={v => { const newItems = [...(properties.items || [])]; newItems[i] = v; onUpdate({ items: newItems }); }} readOnly={readOnly} />
                             </li>
                         ))}
                     </ul>

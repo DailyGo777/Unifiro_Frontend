@@ -186,15 +186,44 @@ export default function FormsPage() {
         console.error("Failed to parse draft", e);
       }
     }
+
+    // Load from template if we just came from gallery
+    const selectedTemplate = localStorage.getItem('selectedTemplateForEvent');
+    if (selectedTemplate) {
+      try {
+        const templateData = JSON.parse(selectedTemplate);
+        if (templateData.title) {
+          setBlocks(prev => prev.map(b => b.isTitle ? { ...b, content: templateData.title } : b));
+        }
+        if (templateData.image) setCoverImage(templateData.image);
+        // We could also try to map templateData.items to form blocks here if they exist
+        // For now, at least we keep the context
+      } catch (e) {
+        console.error("Failed to load selected template", e);
+      }
+    }
   }, []);
+
+  // Autosave to localStorage so SettingsPage can pick it up
+  useEffect(() => {
+    localStorage.setItem('formBlocks', JSON.stringify(blocks));
+  }, [blocks]);
+
+  useEffect(() => {
+    if (logo) localStorage.setItem('logo', logo);
+  }, [logo]);
+
+  useEffect(() => {
+    if (coverImage) localStorage.setItem('coverImage', coverImage);
+  }, [coverImage]);
 
   const saveDraft = () => {
     // Save to localStorage as a personal template
     const personalTemplates = JSON.parse(localStorage.getItem('personalTemplates') || '[]');
-    
+
     const formName = prompt('Enter a name for this template:');
     if (!formName) return;
-    
+
     const newTemplate = {
       id: Math.random().toString(36).substr(2, 9),
       title: formName,
@@ -204,19 +233,19 @@ export default function FormsPage() {
       image: coverImage || null,
       logo: logo || null
     };
-    
+
     personalTemplates.push(newTemplate);
     localStorage.setItem('personalTemplates', JSON.stringify(personalTemplates));
-    
+
     if (toast) {
       toast.success("Template saved successfully! Redirecting...");
     } else {
       alert("Template saved successfully!");
     }
-    
+
     // Navigate to templates page after a short delay
     setTimeout(() => {
-      router.push('/create-event/templates');
+      router.push('/templates');
     }, 1000);
   };
 
@@ -385,12 +414,12 @@ export default function FormsPage() {
                 {(block.group === 'Input' || block.group === 'Special') && !['divider', 'spacer', 'columns_2'].includes(block.type) && (
                   <div className="mt-2 pt-3 border-t border-gray-100">
                     <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Placeholder Text</label>
-                    <input 
-                      className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg focus:ring-2 focus:ring-offset-0 focus:border-gray-200 bg-white transition-all placeholder-gray-400" 
-                      value={block.placeholder || ''} 
-                      onChange={(e) => updateBlock(block.id, { placeholder: e.target.value })} 
+                    <input
+                      className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg focus:ring-2 focus:ring-offset-0 focus:border-gray-200 bg-white transition-all placeholder-gray-400"
+                      value={block.placeholder || ''}
+                      onChange={(e) => updateBlock(block.id, { placeholder: e.target.value })}
                       onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }}
-                      placeholder="e.g. Enter your answer here..." 
+                      placeholder="e.g. Enter your answer here..."
                     />
                   </div>
                 )}
@@ -498,7 +527,16 @@ export default function FormsPage() {
           <button onClick={() => setShowDesignPanel(!showDesignPanel)} className={`p-2.5 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-100 transition-all ${showDesignPanel ? 'bg-gray-100 border-gray-400' : ''}`} title="Design & Branding"><Palette size={18} /></button>
           <button onClick={saveDraft} className={`px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all flex items-center gap-2 text-sm`}><Save size={16} /> Save</button>
           <Link href="/create-event/upload">
-            <button className={`px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold shadow-lg hover:shadow-xl hover:opacity-90 transition-all flex items-center gap-2 text-sm border border-teal-600`}>Next <ArrowRight size={16} /></button>
+            <button
+              onClick={() => {
+                localStorage.setItem('formBlocks', JSON.stringify(blocks));
+                localStorage.setItem('coverImage', coverImage || '');
+                localStorage.setItem('logo', logo || '');
+              }}
+              className={`px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold shadow-lg hover:shadow-xl hover:opacity-90 transition-all flex items-center gap-2 text-sm border border-teal-600`}
+            >
+              Next <ArrowRight size={16} />
+            </button>
           </Link>
         </div>
       </header>
