@@ -163,3 +163,73 @@ body {
 .Toastify__progress-bar.unifiro-toast-progress {
   background: rgba(255, 255, 255, 0.7) !important;
 }
+
+/* --- Unifiro Forms UI adjustments (visual-only, keeps behavior intact) --- */
+.forms-ui {
+  background: linear-gradient(90deg, #fffaf6 0%, #ffffff 100%);
+}
+
+.forms-ui header {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.forms-ui header h1 {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.forms-ui header p.description {
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Card-like appearance for blocks and drop areas */
+.forms-ui .group.relative,
+.forms-ui .group.relative textarea,
+.forms-ui .group.relative input,
+.forms-ui .group.relative .bg-white {
+  background: #ffffff;
+}
+
+.forms-ui .group.relative {
+  border: 1px solid rgba(15,23,42,0.04) !important;
+  border-radius: 12px !important;
+  padding: 18px !important;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.04) !important;
+}
+
+.forms-ui .max-w-3xl.mx-auto.py-12.px-12 {
+  background: transparent;
+}
+
+/* Lighter dashed cover area */
+.forms-ui .border-2.border-dashed.border-gray-300 {
+  border-style: dashed !important;
+  border-color: rgba(15,23,42,0.06) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9));
+}
+
+/* Submit button tweak to match Figma gradient */
+.forms-ui .submit-btn {
+  background: linear-gradient(90deg,#2cc3b9,#0fb27f) !important;
+  border: none !important;
+  box-shadow: 0 6px 20px rgba(15,156,128,0.12) !important;
+}
+
+/* Subtle left vertical bar for visual structure */
+.forms-ui .left-accent {
+  border-left: 4px solid rgba(15,156,128,0.08);
+  padding-left: 1rem;
+}
+
+/* Smaller helper text style used in several places */
+.forms-ui .muted { color: #6b7280; font-size: 13px; }
+
+
+/* Utility classes */
+.h-cover {
+  height: 100vh;
+}

@@ -43,7 +43,7 @@ export default function TemplatesSidebar() {
 
     return (
         <aside
-            className={`${isCollapsed ? "w-20" : "w-64"
+            className={`${isCollapsed ? "w-20" : "w-20 md:w-64"
                 } h-cover bg-white sticky top-0 border-r border-gray-100 flex flex-col p-4 transition-all duration-300 md:relative fixed z-50`}
         >
             <button
@@ -53,7 +53,7 @@ export default function TemplatesSidebar() {
                 {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
 
-            <div className={`mb-10 flex items-center ${isCollapsed ? "justify-center" : "gap-2"}`}>
+            <div className={`mb-10 flex items-center ${isCollapsed ? "justify-center" : "justify-center md:gap-2 md:justify-start"}`}>
                 <div className="shrink-0 overflow-hidden">
                     <button
                         onClick={() => { setView('landing'); setSelectedLayout(null); }}
@@ -68,7 +68,7 @@ export default function TemplatesSidebar() {
                                 <span className="bg-gradient-to-r from-teal-500 via-lime-500 to-yellow-400 bg-clip-text text-transparent">
                                     uni
                                 </span>
-                                <span className="text-black">firo</span>
+                                <span className="text-black hidden md:inline">firo</span>
                             </div>
                         )}
                     </button>
@@ -79,11 +79,11 @@ export default function TemplatesSidebar() {
             <button
                 onClick={() => { setView('builder'); setSelectedLayout(null); }}
                 className={`bg-gradient-to-r cursor-pointer from-[#14b8a6] via-[#22c55e] to-[#84cc16] text-white font-medium rounded-xl flex items-center justify-center shadow-lg shadow-teal-100 hover:shadow-xl transition-all mb-8 whitespace-nowrap
-                ${isCollapsed ? "w-12 h-12 p-0 mx-auto" : "w-full py-3 px-4 gap-2"}
+                ${isCollapsed ? "w-12 h-12 p-0 mx-auto" : "w-12 h-12 p-0 mx-auto md:w-full md:py-3 md:px-4 md:gap-2 md:mx-0"}
                 ${isCreateActive ? "ring-2 ring-offset-2 ring-teal-500" : ""}`}
             >
                 <Plus size={20} />
-                {!isCollapsed && "Create Template"}
+                {!isCollapsed && <span className="hidden md:inline">Create Template</span>}
             </button>
 
             <nav className="flex flex-col gap-2">
@@ -94,10 +94,10 @@ export default function TemplatesSidebar() {
                     const Content = (
                         <div className={`flex items-center w-full h-full rounded-[10px] transition-all duration-200 text-black
                                 ${isActive ? "bg-white" : ""} 
-                                ${isCollapsed ? "justify-center p-3" : "gap-4 px-4 py-3"}
+                                ${isCollapsed ? "justify-center p-3" : "justify-center p-3 md:gap-4 md:px-4 md:py-3 md:justify-start"}
                             `}>
                             {isActive && !isCollapsed && (
-                                <div className="absolute left-0 top-0 h-full w-1 rounded-l-md text-black" />
+                                <div className="absolute left-0 top-0 h-full w-1 rounded-l-md text-black hidden md:block" />
                             )}
                             {isActive && (
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-transparent opacity-50 pointer-events-none rounded-xl text-black" />
@@ -107,7 +107,7 @@ export default function TemplatesSidebar() {
                                 size={22}
                                 className={`shrink-0 ${isActive ? "text-black" : "text-gray-800"}`}
                             />
-                            {!isCollapsed && <span className="z-10 whitespace-nowrap overflow-hidden">{item.name}</span>}
+                            {!isCollapsed && <span className="z-10 whitespace-nowrap overflow-hidden hidden md:block">{item.name}</span>}
 
                             {isCollapsed && (
                                 <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded opacity-2 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap text-white">
@@ -127,7 +127,7 @@ export default function TemplatesSidebar() {
                                         ? "p-[1.5px] bg-gradient-to-r from-orange-400 via-yellow-400 to-green-400 shadow-sm text-gray-800 font-bold"
                                         : "text-gray-800 hover:bg-gray-50"
                                     }
-                                ${isCollapsed ? "justify-center p-3" : "gap-4"}
+                                ${isCollapsed ? "justify-center p-3" : "justify-center p-3 md:gap-4 md:justify-start"}
                                 `}
                             >
                                 {Content}
@@ -143,7 +143,7 @@ export default function TemplatesSidebar() {
                                         ? "p-[1.5px] bg-gradient-to-r from-orange-400 via-yellow-400 to-green-400 shadow-sm text-gray-800 font-bold"
                                         : "text-gray-800 hover:bg-gray-50"
                                     }
-                                ${isCollapsed ? "justify-center p-3" : "gap-4"}
+                                ${isCollapsed ? "justify-center p-3" : "justify-center p-3 md:gap-4 md:justify-start"}
                                 `}
                             >
                                 {Content}
@@ -155,47 +155,20 @@ export default function TemplatesSidebar() {
 
             <div className="flex-1" />
 
-            <div className={`mt-auto pt-8 ${isCollapsed ? "flex justify-center" : "px-1"}`}>
+            <div className={`mt-auto pt-8 ${isCollapsed ? "flex justify-center" : "px-1 md:block flex justify-center"}`}>
                 <button
                     onClick={handleInsertClick}
-                    className={`flex items-center gap-3 w-full p-2 rounded-2xl transition-all group ${isCollapsed ? "justify-center" : "bg-gray-50/80 hover:bg-gray-100 border border-gray-100/50 shadow-sm"} ${isComponentLibraryOpen && view === 'builder' ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''}`}
+                    className={`flex items-center gap-3 w-full p-2 rounded-2xl transition-all group ${isCollapsed ? "justify-center" : "justify-center md:justify-start bg-gray-50/80 hover:bg-gray-100 border border-gray-100/50 shadow-sm"} ${isComponentLibraryOpen && view === 'builder' ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''}`}
 
                 >
                     <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <LayoutTemplate size={20} className="text-gray-600" />
                     </div>
                     {!isCollapsed && (
-                        <span className="text-sm font-bold text-gray-900">Insert</span>
+                        <span className="text-sm font-bold text-gray-900 hidden md:block">Insert</span>
                     )}
                 </button>
             </div>
-
-            {/* Mobile Overlay to close sidebar*/}
-            <style jsx>{`
-        @media (max-width: 768px) {
-          aside {
-            width: 80px !important; /* Force sidebar to collapsed width on mobile */
-            position: fixed; /* Ensure it stays in place on scroll */
-            height: 100vh; /* Full height */
-            z-index: 50; /* Ensure it's above other content */
-          }
-          /* Hide text elements on mobile regardless of state to ensure "only icons" */
-          aside .whitespace-nowrap {
-             display: none; 
-          }
-          /* Re-enable icon display if constrained by above */
-          aside a, aside button {
-             justify-content: center !important; /* Center icons */
-             padding: 12px 0 !important; /* Adjust padding */
-             width: 100% !important; /* Full width for items */
-          }
-           aside button {
-             width: 48px !important; /* Specific width for the create event button */
-             height: 48px !important; /* Specific height for the create event button */
-             margin: 0 auto 2rem auto !important; /* Center and add margin */
-           }
-        }
-      `}</style>
         </aside>
     );
 }

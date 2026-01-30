@@ -1,15 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import TemplateBuilderSidebar from "./TemplateBuilderSidebar";
+import Renderer from "./Renderer";
 import {
     Search, LayoutTemplate, Type, Image as ImageIcon, MousePointer2,
-    Menu, CreditCard, ChevronRight, ChevronDown, Box, Layout,
-    Twitter, Instagram, Facebook, Table, X, Move, Maximize2,
+    Menu, CreditCard, ChevronRight, ChevronDown, Box, Layout, Plus,
+    Table, X, Move, Maximize2,
     Settings, Eye, Save, Download, HelpCircle, Palette, MousePointer, PaintBucket,
     Pencil
 } from 'lucide-react';
 import { useTemplates } from "@/context/TemplatesContext";
+import { toast } from 'react-toastify';
 
 // --- Sub-Components ---
 
@@ -31,49 +35,25 @@ const ResizeHandle = ({ position, onMouseDown }) => {
     );
 };
 
-const InlineText = ({ value, onChange, className, style, tagName = 'span', readOnly, placeholder }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [text, setText] = useState(value);
 
-    useEffect(() => { setText(value); }, [value]);
-
-    if (readOnly) {
-        return React.createElement(tagName, { className, style }, value || placeholder);
-    }
-
-    if (isEditing) {
-        return (
-            <input
-                autoFocus
-                className="bg-white/50 outline-blue-500 outline outline-2 rounded min-w-[20px] px-1"
-                style={{ ...style, width: 'auto', minWidth: '100%', height: 'auto', display: 'inline-block', color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', textAlign: 'inherit' }}
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onBlur={() => { setIsEditing(false); onChange(text); }}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') { setIsEditing(false); onChange(text); }
-                }}
-                onClick={(e) => e.stopPropagation()}
-            />
-        );
-    }
-
-    return React.createElement(tagName, {
-        className: `${className} hover:outline hover:outline-1 hover:outline-blue-200 cursor-text transition-all rounded px-1 -mx-1`,
-        style: style,
-        onDoubleClick: (e) => {
-            e.stopPropagation();
-            setIsEditing(true);
-        }
-    }, text || placeholder || 'Double click to edit');
-};
 
 // --- Main App Component ---
 
 export default function TemplateBuilder({ onBack, initialItems, initialName, initialId }) {
+    const router = useRouter();
     const { isComponentLibraryOpen, setIsComponentLibraryOpen } = useTemplates();
-    const [canvasItems, setCanvasItems] = useState(initialItems || []);
+    const [canvasItems, setCanvasItems] = useState(Array.isArray(initialItems) ? initialItems : []);
     const [templateName, setTemplateName] = useState(initialName || "Untitled Template");
+
+    // Sync state with props when switching templates
+    useEffect(() => {
+        if (Array.isArray(initialItems)) {
+            setCanvasItems(initialItems);
+        }
+        if (initialName) {
+            setTemplateName(initialName);
+        }
+    }, [initialItems, initialName, initialId]);
 
     // Ensure isSidebarOpen is synced with context
     const isSidebarOpen = isComponentLibraryOpen;
@@ -85,7 +65,10 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
     });
 
     const [selectedId, setSelectedId] = useState(null);
-    const selectedItem = useMemo(() => canvasItems.find(i => i.id === selectedId), [canvasItems, selectedId]);
+    const selectedItem = useMemo(() => {
+        if (!Array.isArray(canvasItems)) return null;
+        return canvasItems.find(i => i.id === selectedId);
+    }, [canvasItems, selectedId]);
 
     const [viewMode, setViewMode] = useState('edit');
     const [isPageSettingsOpen, setIsPageSettingsOpen] = useState(false);
@@ -144,7 +127,7 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
 
     const getDefaultContent = (type, label) => {
         const defaults = { color: '#ffffff' };
-        if (type === 'button') return { label: 'Click Me', color: '#4f46e5' };
+        if (type === 'button') return { label: 'Click Me', color: '#46e55bff' };
         if (type === 'input') return { label: 'Label', placeholder: 'Placeholder...', color: '#ffffff' };
         if (type === 'checkbox') return { label: 'Option', color: '#ffffff' };
         if (type === 'textarea') return { label: 'Message', placeholder: 'Type here...', color: '#ffffff' };
@@ -164,6 +147,8 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
     };
 
     const deleteItem = (id) => {
+        const item = canvasItems.find(i => i.id === id);
+        if (item?.isLocked) return; // Prevent deletion of locked items
         setCanvasItems(prev => prev.filter(item => item.id !== id));
         if (selectedId === id) setSelectedId(null);
     };
@@ -221,48 +206,59 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
         }
     };
 
+
+
     const handlePublish = () => {
         setIsSaving(true);
         try {
             const saved = localStorage.getItem('personalTemplates');
             const personalTemplates = saved ? JSON.parse(saved) : [];
 
+            let templateToSave;
             let updatedTemplates;
             if (initialId) {
                 // Update existing
-                updatedTemplates = personalTemplates.map(t => t.id === initialId ? {
-                    ...t,
+                const existing = personalTemplates.find(t => t.id === initialId) || {};
+                templateToSave = {
+                    ...existing,
                     title: templateName,
                     items: canvasItems,
                     updatedAt: new Date().toISOString()
-                } : t);
+                };
+                updatedTemplates = personalTemplates.map(t => t.id === initialId ? templateToSave : t);
             } else {
                 // Create new
-                const newTemplate = {
+                templateToSave = {
                     id: Date.now().toString(),
                     title: templateName,
                     category: "Personal",
                     color: "bg-white",
-                    image: null,
+                    image: canvasItems.find(i => i.type === 'image')?.properties?.src || null,
                     items: canvasItems,
                     createdAt: new Date().toISOString()
                 };
-                updatedTemplates = [newTemplate, ...personalTemplates];
+                updatedTemplates = [templateToSave, ...personalTemplates];
             }
 
             localStorage.setItem('personalTemplates', JSON.stringify(updatedTemplates));
 
             // Also set as current template for event in case they want to register now
-            localStorage.setItem('selectedTemplateForEvent', JSON.stringify(newTemplate));
+            localStorage.setItem('selectedTemplateForEvent', JSON.stringify(templateToSave));
+
+            toast.success("Template published successfully!");
 
             setTimeout(() => {
                 setIsSaving(false);
                 setIsPublished(true);
-                // Don't auto-navigate back yet, let them see the success and choice
-                // if (onBack) onBack(); 
+                router.push('/create-event/forms');
             }, 1000);
         } catch (e) {
             console.error("Failed to save template", e);
+            if (e.name === 'QuotaExceededError' || e.code === 22) {
+                toast.error("Storage full! Please delete some old templates or images.");
+            } else {
+                toast.error("Failed to publish template");
+            }
             setIsSaving(false);
         }
     };
@@ -342,7 +338,7 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
                                 href="/create-event/forms"
                                 className="px-6 py-1.5 flex items-center gap-2 text-sm font-bold text-white rounded-lg bg-green-600 shadow-lg shadow-green-200 transition-all hover:bg-green-700 hover:-translate-y-0.5"
                             >
-                                <Plus size={16} /> REGISTER EVENT
+                                <Plus size={16} /> CREATE FORMS
                             </Link>
                         ) : (
                             <button onClick={handlePublish} className={`px-6 py-1.5 flex items-center gap-2 text-sm font-bold text-white rounded-lg shadow-lg shadow-indigo-200 transition-all ${isSaving ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-0.5'}`}>
@@ -367,7 +363,7 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
                             backgroundSize: '24px 24px'
                         }}
                     >
-                        {canvasItems.length === 0 && (
+                        {Array.isArray(canvasItems) && canvasItems.length === 0 && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-300 pointer-events-none">
                                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
                                     <Box size={40} className="opacity-20" />
@@ -376,7 +372,7 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
                             </div>
                         )}
 
-                        {canvasItems.map(item => (
+                        {Array.isArray(canvasItems) && canvasItems.map(item => (
                             <div
                                 key={item.id}
                                 onMouseDown={(e) => {
@@ -391,10 +387,13 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
                                     <>
                                         <div className="absolute -top-12 left-0 flex items-center bg-white border border-gray-200 shadow-xl rounded-lg overflow-hidden z-50 p-1">
                                             <div className="px-3 py-1 text-[10px] font-black text-indigo-600 uppercase tracking-widest">{item.label}</div>
-                                            <div className="h-4 w-px bg-gray-100 mx-1"></div>
-                                            <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} className="p-1.5 hover:bg-red-50 text-red-500 transition-colors rounded-lg">
-                                                <X size={14} />
-                                            </button>
+                                            <div className="flex items-center gap-1 border-l border-indigo-100 pl-2">
+                                                {!item.isLocked && (
+                                                    <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} className="p-1.5 hover:bg-red-50 text-red-500 transition-colors rounded-lg">
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                         <ResizeHandle position="top-left" onMouseDown={(e) => startResizing(e, item.id, 'top-left')} />
                                         <ResizeHandle position="top-right" onMouseDown={(e) => startResizing(e, item.id, 'top-right')} />
@@ -482,146 +481,4 @@ export default function TemplateBuilder({ onBack, initialItems, initialName, ini
     );
 }
 
-const Renderer = ({ item, onUpdate, isPreview = false, isSidebarPreview = false }) => {
-    const { type, properties, w, h } = item;
-    const baseStyle = {
-        backgroundColor: (type === 'button' || type === 'social' || type === 'grid') ? 'transparent' : (properties?.color || 'transparent'),
-        width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', transition: 'all 0.2s ease', overflow: 'hidden'
-    };
-    const scaleClass = isSidebarPreview ? "scale-[0.7] origin-center" : "";
-    const readOnly = isPreview || isSidebarPreview || !onUpdate;
 
-    switch (type) {
-        case 'navigation':
-            return (
-                <div style={baseStyle} className={`px-8 shadow-sm border-b border-gray-100 items-center justify-between flex-row ${scaleClass}`}>
-                    <div className="font-black text-lg tracking-tighter text-indigo-600">
-                        <InlineText value={properties?.title || 'Brand'} onChange={v => onUpdate({ title: v })} readOnly={readOnly} />
-                    </div>
-                    <div className="flex gap-6">
-                        {properties?.links?.map((link, i) => (
-                            <InlineText key={i} value={link} tagName="span" className="text-xs font-bold text-gray-400 uppercase tracking-widest"
-                                onChange={v => { const newLinks = [...(properties.links || [])]; newLinks[i] = v; onUpdate({ links: newLinks }); }}
-                                readOnly={readOnly} />
-                        ))}
-                    </div>
-                    {!isSidebarPreview && <button className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Sign Up</button>}
-                </div>
-            );
-        case 'section': case 'hero':
-            return (
-                <div style={{ ...baseStyle, textAlign: 'center' }} className={`p-10 border border-gray-100 rounded-3xl shadow-indigo-500/5 shadow-xl ${scaleClass}`}>
-                    <div className="text-4xl font-black tracking-tighter mb-4 text-gray-900 leading-tight">
-                        <InlineText value={properties?.title || 'Title'} onChange={v => onUpdate({ title: v })} readOnly={readOnly} />
-                    </div>
-                    <div className="text-gray-400 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                        <InlineText value={properties?.subtitle || 'Subtitle'} onChange={v => onUpdate({ subtitle: v })} readOnly={readOnly} />
-                    </div>
-                </div>
-            );
-        case 'input':
-            return (
-                <div className={`p-4 w-full h-full flex flex-col justify-center ${scaleClass}`}>
-                    <div className="text-[10px] font-black text-gray-400 mb-2 ml-1 uppercase tracking-widest">
-                        <InlineText value={properties?.label || 'Label'} onChange={v => onUpdate({ label: v })} readOnly={readOnly} />
-                    </div>
-                    <div className="relative">
-                        <input type="text" placeholder={properties?.placeholder} disabled={!isPreview} className="w-full py-3 px-4 border border-gray-200 rounded-2xl text-sm bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all shadow-sm" />
-                    </div>
-                </div>
-            );
-        case 'textarea':
-            return (
-                <div className={`p-4 w-full h-full flex flex-col ${scaleClass}`}>
-                    <div className="text-[10px] font-black text-gray-400 mb-2 ml-1 uppercase tracking-widest">
-                        <InlineText value={properties?.label || 'Label'} onChange={v => onUpdate({ label: v })} readOnly={readOnly} />
-                    </div>
-                    <textarea placeholder={properties?.placeholder} disabled={!isPreview} rows={Math.floor((h || 100) / 35)} className="w-full flex-1 p-4 border border-gray-200 rounded-2xl text-sm bg-white resize-none focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all shadow-sm"></textarea>
-                </div>
-            );
-        case 'button':
-            return (
-                <div className={`p-4 w-full h-full flex items-center ${scaleClass}`}>
-                    <button style={{ backgroundColor: properties?.color || '#2563eb' }} className="w-full h-full text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center">
-                        <InlineText value={properties?.label || 'BUTTON'} onChange={v => onUpdate({ label: v })} readOnly={readOnly} />
-                    </button>
-                </div>
-            );
-        case 'social':
-            return (
-                <div className={`flex items-center justify-center gap-6 w-full h-full bg-gray-50/50 rounded-3xl border border-gray-100 ${scaleClass}`}>
-                    <div className="p-3 bg-white rounded-2xl shadow-sm text-blue-400 hover:text-blue-500 transition-colors cursor-pointer"><Twitter size={20} /></div>
-                    <div className="p-3 bg-white rounded-2xl shadow-sm text-pink-500 hover:text-pink-600 transition-colors cursor-pointer"><Instagram size={20} /></div>
-                    <div className="p-3 bg-white rounded-2xl shadow-sm text-blue-700 hover:text-blue-800 transition-colors cursor-pointer"><Facebook size={20} /></div>
-                </div>
-            );
-        case 'grid':
-            return (
-                <div className={`grid grid-cols-2 gap-3 p-4 w-full h-full ${scaleClass}`}>
-                    {properties?.items?.map((itemText, i) => (
-                        <div key={i} className="bg-white rounded-2xl flex items-center justify-center text-[10px] font-black text-indigo-400 uppercase tracking-widest border border-indigo-100 shadow-sm">
-                            <InlineText value={itemText} onChange={v => { const newItems = [...(properties.items || [])]; newItems[i] = v; onUpdate({ items: newItems }); }} readOnly={readOnly} />
-                        </div>
-                    ))}
-                    {!properties?.items && (<div className="bg-white rounded-2xl shadow-sm border border-indigo-50"></div>)}
-                </div>
-            );
-        case 'form-group':
-            return (
-                <div style={baseStyle} className={`p-6 border border-indigo-100 rounded-3xl shadow-xl shadow-indigo-500/5 ${scaleClass}`}>
-                    <div className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-4 text-center">
-                        <InlineText value={properties?.title || 'Newsletter'} onChange={v => onUpdate({ title: v })} readOnly={readOnly} />
-                    </div>
-                    <div className="flex gap-2">
-                        <input type="email" placeholder="email@example.com" disabled className="flex-1 p-2 bg-gray-50 border border-gray-100 rounded-xl text-[10px] outline-none" />
-                        <button className="bg-indigo-600 text-white px-3 py-2 rounded-xl text-[8px] font-black uppercase">Join</button>
-                    </div>
-                </div>
-            );
-        case 'image':
-            return (
-                <div className={`w-full h-full rounded-2xl overflow-hidden bg-gray-100 relative group ${scaleClass}`}>
-                    {properties?.src ? (
-                        <img src={properties.src} alt="content" className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                            <ImageIcon size={32} />
-                            <span className="text-[10px] font-bold uppercase mt-2">Image</span>
-                        </div>
-                    )}
-                </div>
-            );
-        case 'icon-card':
-            return (
-                <div className={`w-full h-full bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm ${scaleClass}`}>
-                    <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-                        {properties?.icon === 'calendar' ? <Layout size={14} /> : <Move size={14} />}
-                    </div>
-                    <div className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">
-                        <InlineText value={properties?.label || 'Label'} onChange={v => onUpdate({ label: v })} readOnly={readOnly} />
-                    </div>
-                    <div className="text-xs font-semibold text-gray-800">
-                        <InlineText value={properties?.text || 'Value'} onChange={v => onUpdate({ text: v })} readOnly={readOnly} />
-                    </div>
-                </div>
-            );
-        case 'list':
-            return (
-                <div className={`w-full h-full p-4 ${scaleClass}`}>
-                    <ul className="list-disc pl-4 space-y-2">
-                        {properties?.items?.map((itemText, i) => (
-                            <li key={i} className="text-xs text-gray-600 leading-relaxed">
-                                <InlineText value={itemText} onChange={v => { const newItems = [...(properties.items || [])]; newItems[i] = v; onUpdate({ items: newItems }); }} readOnly={readOnly} />
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            );
-        default:
-            return (
-                <div className="bg-gray-50 w-full h-full rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                    <InlineText value={item.label} onChange={v => onUpdate({ label: v })} readOnly={readOnly} />
-                </div>
-            );
-    }
-};

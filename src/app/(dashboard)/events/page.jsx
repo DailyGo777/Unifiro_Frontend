@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import EventHeader from "@/components/dashboard/EventHeader";
 import { getPublishedEvents } from "@/utils/publishEvent";
+import ToggleSwitch from "@/components/ToggleSwitch";
 
 export default function EventsPage() {
     const [events, setEvents] = useState([
@@ -81,7 +82,7 @@ export default function EventsPage() {
     // Load published events from localStorage on mount
     useEffect(() => {
         const publishedEvents = getPublishedEvents();
-        
+
         if (publishedEvents.length > 0) {
             // Convert published events to table format
             const formattedPublishedEvents = publishedEvents.map((event, idx) => ({
@@ -99,7 +100,7 @@ export default function EventsPage() {
                 isPublished: true,
                 eventData: event
             }));
-            
+
             // Combine published events with mock data
             setEvents(prev => [...formattedPublishedEvents, ...prev]);
         }
@@ -114,12 +115,12 @@ export default function EventsPage() {
     const handleDeleteEvent = (id) => {
         if (confirm('Are you sure you want to delete this event?')) {
             setEvents(events.filter(event => event.id !== id));
-            
+
             // Also remove from localStorage
             const publishedEvents = getPublishedEvents();
             const updated = publishedEvents.filter(e => e.id !== id);
             localStorage.setItem('publishedEvents', JSON.stringify(updated));
-            
+
             setOpenMenuId(null);
         }
     };
@@ -149,16 +150,6 @@ export default function EventsPage() {
         };
     }, [openMenuId]);
 
-    const ToggleSwitch = ({ isOn, onToggle }) => (
-        <div
-            onClick={onToggle}
-            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${isOn ? 'bg-teal-500' : 'bg-red-700'}`}
-        >
-            <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${isOn ? 'translate-x-6' : 'translate-x-0'}`}></div>
-            <span className={`absolute text-[10px] font-bold text-white ml-1.5 ${isOn ? 'opacity-0' : 'opacity-100'}`}>OFF</span>
-            <span className={`absolute text-[10px] font-bold text-white ml-7 ${isOn ? 'opacity-100' : 'opacity-0'}`}>ON</span>
-        </div>
-    );
 
     return (
         <EventHeader title="Events">
@@ -240,8 +231,8 @@ export default function EventsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-3 py-1 rounded-lg text-xs font-medium ${event.status === 'Published' ? 'bg-teal-50 text-teal-600' :
-                                                    event.status === 'Closed' ? 'bg-red-50 text-red-600' :
-                                                        'bg-blue-50 text-blue-600'
+                                                event.status === 'Closed' ? 'bg-red-50 text-red-600' :
+                                                    'bg-blue-50 text-blue-600'
                                                 }`}>
                                                 {event.status}
                                             </span>

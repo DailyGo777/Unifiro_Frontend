@@ -1,16 +1,10 @@
 export const kanLayout = [
     // Top Logos
-    { id: 'logo-1', type: 'image', label: 'Logos', x: 50, y: 20, w: 350, h: 60, zIndex: 10, properties: { src: 'https://placehold.co/400x80/white/png?text=Logos+Here' } },
+    { id: 'logo-1', type: 'image', label: 'Logos', x: 50, y: 20, w: 80, h: 76, zIndex: 10, properties: { src: 'https://placehold.co/400x80/white/png?text=Logos+Here' } },
 
     // Hero Section
-    {
-        id: 'hero-txt', type: 'hero', label: 'Hero Text', x: 0, y: 0, w: 500, h: 550, zIndex: 1, properties: {
-            title: 'KARNATAKA ACCELERATION NETWORK (KAN)',
-            subtitle: 'COHORT 2 | MANGALURU CLUSTER',
-            color: '#f97316'
-        }
-    },
-    { id: 'hero-img', type: 'image', label: 'Hero Image', x: 500, y: 0, w: 500, h: 550, zIndex: 1, properties: { src: 'https://placehold.co/600x800/orange/white?text=Tower+Image' } },
+
+    { id: 'hero-img', type: 'image', label: 'Hero Image', x: 0, y: 0, w: 1000, h: 550, zIndex: 1, properties: { src: 'https://placehold.co/600x800/orange/white?text=Tower+Image' } },
 
     // Floating Info Cards
     { id: 'card-1', type: 'icon-card', label: 'Date', x: 50, y: 480, w: 220, h: 120, zIndex: 20, properties: { icon: 'calendar', label: 'Date', text: 'JANUARY 16, 2026' } },
@@ -48,6 +42,8 @@ export const kanLayout = [
             ]
         }
     },
+    //button section
+    { id: 'btn-1', type: 'button', label: 'Action', x: 631, y: 1441, w: 189, h: 76, zIndex: 4, properties: { label: 'REGISTER NOW'}, color: '#ffffff', isLocked: true },
 
     // Footer
     {
@@ -63,5 +59,5 @@ export const standardLayout = [
     { id: 'st-1', type: 'navigation', label: 'Simple Navbar', x: 50, y: 20, w: 900, h: 70, zIndex: 1, properties: { title: 'Standard Event', links: ['About', 'Register'], color: '#ffffff' } },
     { id: 'st-2', type: 'hero', label: 'Hero', x: 50, y: 120, w: 900, h: 300, zIndex: 2, properties: { title: 'Welcome to Our Event', subtitle: 'Join us for an amazing experience.', color: '#ffffff' } },
     { id: 'st-3', type: 'section', label: 'Details', x: 50, y: 450, w: 900, h: 200, zIndex: 3, properties: { title: 'Event Details', subtitle: 'Date: Oct 24 | Location: Online', color: '#ffffff' } },
-    { id: 'st-4', type: 'button', label: 'Action', x: 350, y: 680, w: 300, h: 60, zIndex: 4, properties: { label: 'REGISTER NOW', color: '#4f46e5' } }
+    { id: 'st-4', type: 'button', label: 'Action', x: 631, y: 1441, w: 189, h: 76, zIndex: 4, properties: { label: 'REGISTER NOW', color: '#19dd78fc', isLocked: true } }
 ];

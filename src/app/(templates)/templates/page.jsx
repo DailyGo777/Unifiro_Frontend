@@ -201,6 +201,7 @@ const TemplatesPage = () => {
                 {/* 3. BUILDER VIEW */}
                 {view === 'builder' && (
                     <TemplateBuilder
+                        key={editingTemplate?.id || 'new-builder'}
                         onBack={() => { setView('landing'); setSelectedLayout(null); setEditingTemplate(null); }}
                         initialItems={selectedLayout}
                         initialName={editingTemplate?.title}

@@ -95,9 +95,9 @@ export default function SettingsPage() {
                 // Clear working data
                 clearWorkingData();
 
-                // Redirect to dashboard after 2 seconds
+                // Redirect to discovery page after 2 seconds
                 setTimeout(() => {
-                    router.push(`/dashboard/events/${result.eventId}`);
+                    router.push(`/discover`);
                 }, 2000);
             } else {
                 toast.error(`Failed to publish: ${result.error}`, {
@@ -267,8 +267,8 @@ export default function SettingsPage() {
                                 className="text-center group cursor-pointer"
                             >
                                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all ${privacy === 'public'
-                                        ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400'
-                                        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                                    ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400'
+                                    : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
                                     }`}>
                                     <Globe size={28} />
                                 </div>
@@ -279,8 +279,8 @@ export default function SettingsPage() {
                                 className="text-center group cursor-pointer"
                             >
                                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all ${privacy === 'private'
-                                        ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400'
-                                        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                                    ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400'
+                                    : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
                                     }`}>
                                     <Lock size={28} />
                                 </div>

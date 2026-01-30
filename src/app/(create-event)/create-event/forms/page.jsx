@@ -12,10 +12,11 @@ import {
   Fingerprint, Video, Music, MapPin, Minus, Columns,
   Calculator, Eye, Globe, ShieldCheck, FileCheck,
   CreditCard, User, HelpCircle, AlignLeft,
-  ChevronDown
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
+import ToggleSwitch from '@/components/ToggleSwitch';
 
 // --- Extensive Block Library ---
 const BLOCK_TYPES = [
@@ -128,7 +129,7 @@ const BlockMenu = ({ onSelect, onClose }) => {
         />
       </div>
     </div>
-      <div className="overflow-y-auto p-1 custom-scrollbar flex-1">
+      <div className="overflow-y-auto bg-white p-1 custom-scrollbar flex-1">
         {groups.map(groupName => {
           const blocks = groupedBlocks[groupName];
           if (!blocks || blocks.length === 0) return null;
@@ -206,7 +207,7 @@ export default function FormsPage() {
 
   // Autosave to localStorage so SettingsPage can pick it up
   useEffect(() => {
-    localStorage.setItem('formBlocks', JSON.stringify(blocks));
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(blocks));
   }, [blocks]);
 
   useEffect(() => {
@@ -274,6 +275,23 @@ export default function FormsPage() {
     setBlocks(blocks.filter(b => b.id !== id));
   };
 
+  const moveBlockUp = (index) => {
+    if (index <= 0 || blocks[index]?.isTitle) return;
+    const newBlocks = [...blocks];
+    [newBlocks[index], newBlocks[index - 1]] = [newBlocks[index - 1], newBlocks[index]];
+    setBlocks(newBlocks);
+  };
+
+  const moveBlockDown = (index) => {
+    if (index >= blocks.length - 1 || blocks[index]?.isTitle) return;
+    const newBlocks = [...blocks];
+    [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
+    setBlocks(newBlocks);
+  };
+
+  const canMoveUp = (index) => index > 0 && !blocks[index]?.isTitle;
+  const canMoveDown = (index) => index < blocks.length - 1 && !blocks[index]?.isTitle;
+
   const handleDragStart = (e, position) => {
     dragItem.current = position;
     e.dataTransfer.effectAllowed = "move";
@@ -330,10 +348,27 @@ export default function FormsPage() {
       case 'url': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><LinkIcon size={18} className="text-gray-400" /><span>https://example.com</span></div>;
       case 'number': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><Hash size={18} className="text-gray-400" /><span>Number</span></div>;
       case 'rating': return <div className="flex gap-2 text-gray-300"><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /><Star fill="currentColor" size={28} className="hover:text-yellow-400 transition-colors cursor-not-allowed" /></div>;
+      case 'opinion_scale': return <div className="flex justify-between border border-gray-200 rounded-lg overflow-hidden">{[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <div key={n} className="flex-1 py-2 text-center text-xs font-semibold border-r border-gray-100 last:border-0 bg-white text-gray-400">{n}</div>)}</div>;
+      case 'ranking': return <div className="space-y-2">{[1, 2, 3].map(n => <div key={n} className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg bg-white"><GripVertical size={14} className="text-gray-300" /><div className="w-full h-2 bg-gray-100 rounded-full"></div></div>)}</div>;
+      case 'matrix': return <div className="border border-gray-200 rounded-lg overflow-hidden"><div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200"><div className="p-2"></div>{[1, 2, 3].map(n => <div key={n} className="p-2 text-[10px] font-bold text-center text-gray-400">Col {n}</div>)}</div>{[1, 2].map(r => <div key={r} className="grid grid-cols-4 border-b border-gray-100 last:border-0"><div className="p-2 text-[10px] text-gray-400">Row {r}</div>{[1, 2, 3].map(c => <div key={c} className="p-2 flex justify-center"><div className="w-3 h-3 border border-gray-300 rounded-full"></div></div>)}</div>)}</div>;
       case 'slider': return <div className="flex items-center gap-4 py-2"><span className="text-xs text-gray-500">0</span><div className="h-2 bg-gray-200 rounded-full flex-1 relative"><div className="absolute left-1/3 w-5 h-5 bg-white border-2 border-gray-300 rounded-full -top-1.5 shadow-sm"></div></div><span className="text-xs text-gray-500">100</span></div>;
+      case 'signature': return <div className="border border-gray-200 rounded-lg h-24 bg-gray-50/50 flex items-center justify-center text-gray-300 italic text-xs">Sign here...</div>;
       case 'file': return <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-gray-400 bg-gray-50/30"><Upload size={24} className="mb-2" /><span className="text-sm font-medium">Click to upload or drag and drop</span><span className="text-xs text-gray-500 mt-1">PNG, JPG, PDF up to 10MB</span></div>;
-      case 'address': return <input type="text" disabled placeholder={block.placeholder || "Street address, city, state, zip"} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal focus:ring-2 focus:ring-offset-0 focus:border-gray-300 transition-shadow" />;
-      case 'country': return <input type="text" disabled placeholder={block.placeholder || "Select a country"} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal focus:ring-2 focus:ring-offset-0 focus:border-gray-300 transition-shadow" />;
+      case 'image': return <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 border border-gray-200"><ImageIcon size={32} /></div>;
+      case 'video': return <div className="aspect-video bg-black rounded-lg flex items-center justify-center text-white/50 border border-gray-200"><Video size={32} /></div>;
+      case 'audio': return <div className="bg-gray-100 p-4 rounded-lg flex items-center gap-4 border border-gray-200"><Music size={24} className="text-gray-400" /><div className="flex-1 h-1 bg-gray-300 rounded-full"></div></div>;
+      case 'google_maps': return <div className="aspect-video bg-blue-50 rounded-lg flex items-center justify-center text-blue-300 border border-gray-200"><MapPin size={32} /></div>;
+      case 'spacer': return <div className="h-12 border border-dashed border-gray-200 rounded-lg flex items-center justify-center text-[10px] text-gray-300 uppercase tracking-widest font-bold">Spacer</div>;
+      case 'columns_2': return <div className="grid grid-cols-2 gap-4"><div className="border border-dashed border-gray-200 rounded-lg h-20"></div><div className="border border-dashed border-gray-200 rounded-lg h-20"></div></div>;
+      case 'calculator': return <div className="bg-teal-50 p-4 rounded-lg flex items-center gap-3 border border-teal-100"><Calculator size={20} className="text-teal-500" /><div className="text-xs font-bold text-teal-700">Calculation Logic Applied</div></div>;
+      case 'hidden_field': return <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 flex items-center gap-3 opacity-60"><Eye size={16} className="text-gray-400" /><span className="text-xs font-medium text-gray-500 italic">Invisible to user</span></div>;
+      case 'address': return <div className="space-y-3"><input type="text" disabled placeholder="Street Address" className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs" /><div className="grid grid-cols-2 gap-3"><input type="text" disabled placeholder="City" className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs" /><input type="text" disabled placeholder="Zip Code" className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs" /></div></div>;
+      case 'country': return <div className="px-3.5 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-400 text-sm font-normal flex items-center gap-3"><Globe size={18} className="text-gray-400" /><span>Select Country</span></div>;
+      case 'gdpr': return <div className="flex items-start gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg"><div className="w-5 h-5 border-2 border-blue-300 rounded flex-shrink-0"></div><span className="text-[11px] text-gray-600 font-medium">I agree to the processing of my personal data according to the GDPR guidelines.</span></div>;
+      case 'terms': return <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg"><div className="w-5 h-5 border-2 border-gray-300 rounded flex-shrink-0"></div><span className="text-[11px] text-gray-600 font-medium">I accept the <span className="text-blue-600 underline">Terms and Conditions</span>.</span></div>;
+      case 'payment': return <div className="p-4 border border-gray-200 rounded-xl bg-gradient-to-br from-white to-gray-50 shadow-sm flex items-center justify-between"><div className="flex items-center gap-3"><CreditCard size={20} className="text-gray-400" /><span className="text-sm font-bold text-gray-700">Stripe Payment Module</span></div><div className="px-3 py-1 bg-teal-50 text-teal-600 font-bold text-[10px] rounded-full uppercase">Secure</div></div>;
+      case 'captcha': return <div className="p-4 border border-gray-200 rounded-lg bg-white flex items-center justify-between mx-auto max-w-xs shrink-0"><div className="flex items-center gap-3"><div className="w-6 h-6 border-2 border-gray-200 rounded"></div><span className="text-sm font-medium">I'm not a robot</span></div><User size={24} className="text-blue-500" /></div>;
+      case 'help_text': return <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-100 rounded-xl"><HelpCircle size={18} className="text-yellow-600 shrink-0 mt-0.5" /><span className="text-xs text-yellow-800 leading-relaxed font-medium">Click the info icon to see how we use this data throughout the registration process.</span></div>;
       case 'divider': return <div className="my-6 border-t border-gray-200"></div>;
       default: return <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 text-sm font-medium italic">Configurable {block.type.replace('_', ' ')} block</div>;
     }
@@ -346,29 +381,37 @@ export default function FormsPage() {
     const BlockIcon = blockTypeInfo?.icon;
 
     return (
-      <div
-        key={block.id}
-        className="group relative py-2 animate-in slide-in-from-top-2 duration-200"
-        draggable={!block.isTitle}
-        onDragStart={(e) => handleDragStart(e, index)}
-        onDragEnter={(e) => handleDragEnter(e, index)}
-        onDragEnd={handleDragEnd}
-        onDragOver={(e) => e.preventDefault()}
-      >
+      <>
         {!block.isTitle && (
-          <div className="absolute -left-12 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={() => setActiveMenu(isEditing ? null : block.id)} className={`p-1.5 text-gray-400 hover:text-${themeColor.value}-600 hover:bg-${themeColor.value}-50 rounded transition-colors`}><Plus size={18} /></button>
-            <div className="p-1.5 text-gray-300 cursor-grab active:cursor-grabbing hover:text-gray-500"><GripVertical size={18} /></div>
+          <div className="flex justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity mb-2">
+            <button onClick={() => setActiveMenu(isEditing ? null : block.id)} className={`p-2 text-gray-800 hover:text-${themeColor.value}-600 hover:bg-${themeColor.value}-50 rounded-md transition-colors`} title="Add block below"><Plus size={18} /></button>
+            {canMoveUp(index) && (
+              <button onClick={() => moveBlockUp(index)} className="p-2 text-gray-800 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Move up"><ChevronUp size={18} /></button>
+            )}
+            {canMoveDown(index) && (
+              <button onClick={() => moveBlockDown(index)} className="p-2 text-gray-800 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Move down"><ChevronDown size={18} /></button>
+            )}
+            <button onClick={() => deleteBlock(block.id)} className="p-2 text-gray-800 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Delete block"><Trash2 size={18} /></button>
           </div>
         )}
-        {activeMenu === block.id && <BlockMenu onSelect={(type) => addBlock(type, index)} onClose={() => setActiveMenu(null)} />}
 
-        <div className="w-full">
-          {isBasicText || block.isTitle ? (
-            <div className={`relative group/text ${activeMenu === block.id ? `ring-2 ring-${themeColor.value}-400 rounded-lg p-2` : ''}`}>
-              <textarea
-                autoFocus={index === blocks.length - 1 && block.content === ''}
-                className={`w-full bg-transparent border-none focus:ring-0 resize-none overflow-hidden 
+        <div
+          key={block.id}
+          className="group relative mb-3 animate-in slide-in-from-top-2 duration-200"
+          draggable={!block.isTitle}
+          onDragStart={(e) => handleDragStart(e, index)}
+          onDragEnter={(e) => handleDragEnter(e, index)}
+          onDragEnd={handleDragEnd}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          {activeMenu === block.id && <BlockMenu onSelect={(type) => addBlock(type, index)} onClose={() => setActiveMenu(null)} />}
+
+          <div className="w-full mb-2">
+            {isBasicText || block.isTitle ? (
+              <div className={`relative group/text ${activeMenu === block.id ? `ring-2 ring-${themeColor.value}-400 rounded-lg p-2` : ''}`}>
+                <textarea
+                  autoFocus={index === blocks.length - 1 && block.content === ''}
+                  className={`w-full bg-transparent border-none focus:ring-0 resize-none overflow-hidden 
                     ${block.type === 'heading_1' || block.isTitle ? 'text-4xl font-bold mb-4' : ''}
                     ${block.type === 'heading_2' ? 'text-2xl font-bold mb-3' : ''}
                     ${block.type === 'heading_3' ? 'text-xl font-semibold mb-2' : ''}
@@ -376,70 +419,67 @@ export default function FormsPage() {
                     ${block.type === 'callout' ? 'bg-gray-50 p-4 rounded-lg text-gray-700' : ''}
                     ${block.type === 'text' && !block.isTitle ? 'text-base text-gray-600' : ''}
                     ${themeFont.value} placeholder-gray-300`}
-                placeholder="Type something..."
-                value={block.content}
-                rows={1}
-                onChange={(e) => { updateBlock(block.id, { content: e.target.value }); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
-                onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }}
-              />
-              {!block.isTitle && (
-                <div className="absolute right-0 top-0 opacity-0 group-hover/text:opacity-100 transition-opacity bg-white shadow-sm border border-gray-200 rounded p-1">
-                  <button onClick={() => deleteBlock(block.id)} className="text-gray-400 hover:text-red-500 transition-colors" title="Delete Block"><Trash2 size={16} /></button>
+                  placeholder="Type something..."
+                  value={block.content}
+                  rows={1}
+                  onChange={(e) => { updateBlock(block.id, { content: e.target.value }); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                  onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }}
+                />
+                {!block.isTitle && (
+                  <div className="absolute right-0 top-0 opacity-0 group-hover/text:opacity-100 transition-opacity bg-white shadow-sm border border-gray-200 rounded p-1">
+                    <button onClick={() => deleteBlock(block.id)} className="text-gray-400 hover:text-red-500 transition-colors" title="Delete Block"><Trash2 size={16} /></button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div className="flex justify-between items-start gap-4 mb-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    {BlockIcon && (
+                      <div className="p-2 bg-gray-100 rounded-lg text-gray-600 flex-shrink-0">
+                        <BlockIcon size={18} />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4 flex-1">
+                      <input className="flex-1 text-base font-semibold text-gray-900 border-none focus:ring-0 p-0 bg-transparent placeholder-gray-400" value={block.content} onChange={(e) => updateBlock(block.id, { content: e.target.value })} onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }} placeholder="Question label..." />
+                      {!isBasicText && (
+                        <div className="flex items-center gap-2 pr-2">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Required</span>
+                          <ToggleSwitch isOn={block.required} onToggle={() => updateBlock(block.id, { required: !block.required })} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* {block.system && <span className="text-[11px] uppercase font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md ml-2 whitespace-nowrap border border-teal-200">Required</span>} */}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className={`bg-white border-l-4 border-transparent pl-5 py-5 transition-all rounded-r-xl hover:shadow-md ${activeMenu === block.id ? `border-${themeColor.value}-500 shadow-lg bg-gray-50/40` : 'hover:border-gray-300'}`}>
-              <div className="flex justify-between items-start gap-4 mb-3">
-                <div className="flex items-center gap-3 flex-1">
-                  {BlockIcon && (
-                    <div className="p-2 bg-gray-100 rounded-lg text-gray-600 flex-shrink-0">
-                      <BlockIcon size={18} />
+
+                <div className="flex flex-col gap-4 mr-6">
+                  {renderGenericInput(block, themeColor.value)}
+
+                  {/* Specific Editor Controls for Multiple Choice/Checkboxes to add options */}
+                  {(block.type === 'multiple_choice' || block.type === 'checkboxes' || block.type === 'dropdown') && (
+                    <button onClick={() => updateBlock(block.id, { options: [...block.options, `Option ${block.options.length + 1}`] })} className={`text-xs text-${themeColor.value}-600 font-semibold hover:text-${themeColor.value}-700 flex items-center gap-2 mt-2 transition-colors`}><Plus size={14} /> Add option</button>
+                  )}
+
+                  {/* Placeholder/Helper Text Editor - Always visible for input and special blocks */}
+                  {(block.group === 'Input' || block.group === 'Special') && !['divider', 'spacer', 'columns_2'].includes(block.type) && (
+                    <div className="mt-2 pt-3 border-t border-gray-100">
+                      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Placeholder Text</label>
+                      <input
+                        className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg focus:ring-2 focus:ring-offset-0 focus:border-gray-200 bg-white transition-all placeholder-gray-400"
+                        value={block.placeholder || ''}
+                        onChange={(e) => updateBlock(block.id, { placeholder: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }}
+                        placeholder="e.g. Enter your answer here..."
+                      />
                     </div>
                   )}
-                  <input className="flex-1 text-base font-semibold text-gray-900 border-none focus:ring-0 p-0 bg-transparent placeholder-gray-400" value={block.content} onChange={(e) => updateBlock(block.id, { content: e.target.value })} onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }} placeholder="Question label..." />
                 </div>
-                {block.system && <span className="text-[11px] uppercase font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md ml-2 whitespace-nowrap border border-teal-200">Required</span>}
               </div>
-
-              <div className="flex flex-col gap-4 mr-6">
-                {renderGenericInput(block, themeColor.value)}
-
-                {/* Specific Editor Controls for Multiple Choice/Checkboxes to add options */}
-                {(block.type === 'multiple_choice' || block.type === 'checkboxes' || block.type === 'dropdown') && (
-                  <button onClick={() => updateBlock(block.id, { options: [...block.options, `Option ${block.options.length + 1}`] })} className={`text-xs text-${themeColor.value}-600 font-semibold hover:text-${themeColor.value}-700 flex items-center gap-2 mt-2 transition-colors`}><Plus size={14} /> Add option</button>
-                )}
-
-                {/* Placeholder/Helper Text Editor - Always visible for input and special blocks */}
-                {(block.group === 'Input' || block.group === 'Special') && !['divider', 'spacer', 'columns_2'].includes(block.type) && (
-                  <div className="mt-2 pt-3 border-t border-gray-100">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Placeholder Text</label>
-                    <input
-                      className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg focus:ring-2 focus:ring-offset-0 focus:border-gray-200 bg-white transition-all placeholder-gray-400"
-                      value={block.placeholder || ''}
-                      onChange={(e) => updateBlock(block.id, { placeholder: e.target.value })}
-                      onKeyDown={(e) => { if (e.key === '?') { e.stopPropagation(); } }}
-                      placeholder="e.g. Enter your answer here..."
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-5 flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                {!isBasicText && block.group !== 'Layout' && (
-                  <div className="flex items-center gap-2 mr-3 border-r border-gray-200 pr-3">
-                    <label className="text-xs flex items-center gap-2.5 text-gray-600 cursor-pointer select-none font-medium">
-                      <input type="checkbox" checked={block.required} onChange={(e) => updateBlock(block.id, { required: e.target.checked })} disabled={block.system} className={`rounded border-gray-300 text-${themeColor.value}-600 focus:ring-${themeColor.value}-500 cursor-pointer`} />
-                      Required
-                    </label>
-                  </div>
-                )}
-                <button onClick={() => deleteBlock(block.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete Block"><Trash2 size={16} /></button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </>
     );
   };
 
@@ -488,10 +528,29 @@ export default function FormsPage() {
                       case 'number': return <input type="number" placeholder={block.placeholder} className={`w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-${themeColor.value}-500/20 focus:border-${themeColor.value}-500 outline-none transition-all`} />;
                       case 'date': return <input type="date" className={`w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-${themeColor.value}-500/20 focus:border-${themeColor.value}-500 outline-none transition-all`} />;
                       case 'time': return <input type="time" className={`w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-${themeColor.value}-500/20 focus:border-${themeColor.value}-500 outline-none transition-all`} />;
-                      case 'rating': return <div className="flex gap-1 text-gray-300 hover:text-yellow-400 cursor-pointer transition-colors"><Star size={28} /><Star size={28} /><Star size={28} /><Star size={28} /><Star size={28} /></div>;
-                      case 'slider': return <input type="range" className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-${themeColor.value}-500`} />;
-                      case 'file': return <div className={`border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:border-${themeColor.value}-300 cursor-pointer transition-colors`}><Upload size={24} className="mb-2 text-gray-400" /><span className="text-sm">Upload File</span></div>;
-                      case 'divider': return <hr className="border-gray-200 my-6" />;
+                      case 'rating': return <div className="flex gap-2 text-gray-300 hover:text-yellow-400 cursor-pointer transition-colors"><Star size={32} /><Star size={32} /><Star size={32} /><Star size={32} /><Star size={32} /></div>;
+                      case 'opinion_scale': return <div className="flex flex-col gap-4"><div className="flex justify-between border-2 border-gray-100 rounded-2xl overflow-hidden shadow-sm">{[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <button key={n} className="flex-1 py-4 text-sm font-bold border-r border-gray-100 last:border-0 hover:bg-gray-50 transition-colors text-gray-600">{n}</button>)}</div><div className="flex justify-between px-2 text-[10px] font-black uppercase tracking-widest text-gray-400"><span>Not likely at all</span><span>Extremely likely</span></div></div>;
+                      case 'ranking': return <div className="space-y-3">{block.options.map((opt, i) => <div key={i} className="flex items-center gap-4 p-4 border border-gray-100 rounded-2xl bg-white shadow-sm cursor-grab active:cursor-grabbing hover:border-gray-300 transition-all"><div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center font-bold text-gray-400">{i + 1}</div><span className="flex-1 font-semibold text-gray-700">{opt}</span><GripVertical size={18} className="text-gray-300" /></div>)}</div>;
+                      case 'matrix': return <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm"><table className="w-full text-sm"><thead><tr className="bg-gray-50 border-b border-gray-100"><th className="p-4"></th>{['Column 1', 'Column 2', 'Column 3'].map(c => <th key={c} className="p-4 font-bold text-gray-600 uppercase tracking-widest text-[10px]">{c}</th>)}</tr></thead><tbody>{['Row 1', 'Row 2'].map(r => <tr key={r} className="border-b border-gray-100 last:border-0"><td className="p-4 font-semibold text-gray-700">{r}</td>{[1, 2, 3].map(c => <td key={c} className="p-4 text-center"><input type="radio" name={`${block.id}-${r}`} className="w-5 h-5 text-teal-600 border-gray-300 focus:ring-teal-500" /></td>)}</tr>)}</tbody></table></div>;
+                      case 'slider': return <div className="space-y-4 py-4"><input type="range" className={`w-full h-2.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-teal-500`} /><div className="flex justify-between text-xs font-bold text-gray-400"><span>0</span><span>100</span></div></div>;
+                      case 'signature': return <div className="w-full rounded-2xl border-2 border-dashed border-gray-200 h-40 bg-gray-50 flex flex-col items-center justify-center gap-3 group hover:border-teal-400 transition-colors cursor-crosshair"><Fingerprint size={32} className="text-gray-300 group-hover:text-teal-400 transition-colors" /><span className="text-sm font-semibold text-gray-400 group-hover:text-teal-600">Click to add signature</span></div>;
+                      case 'file': return <div className={`border-2 border-dashed border-gray-200 rounded-2xl p-12 flex flex-col items-center justify-center text-gray-500 hover:bg-teal-50 hover:border-teal-300 cursor-pointer transition-all shadow-sm active:scale-[0.99]`}><Upload size={40} className="mb-4 text-teal-500 opacity-60" /><span className="text-base font-bold text-teal-900">Upload documents or images</span><span className="text-sm text-gray-400 mt-1 uppercase font-black tracking-widest">Max file size 25MB</span></div>;
+                      case 'image': return <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-gray-50 aspect-video flex items-center justify-center"><ImageIcon size={48} className="text-gray-200" /></div>;
+                      case 'video': return <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-black aspect-video flex items-center justify-center relative"><div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/50 text-white"><Video size={32} /></div></div>;
+                      case 'audio': return <div className="rounded-2xl p-6 bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl border border-gray-700 flex items-center gap-6"><div className="p-4 bg-teal-500 text-white rounded-full group-hover:scale-110 transition-transform"><Music size={24} /></div><div className="flex-1 space-y-2"><div className="h-1.5 bg-gray-700 rounded-full overflow-hidden"><div className="w-1/3 h-full bg-teal-400"></div></div><div className="flex justify-between text-[10px] font-black text-gray-500 tracking-tighter"><span>00:45</span><span>03:20</span></div></div></div>;
+                      case 'google_maps': return <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 aspect-video bg-blue-50 relative"><div className="absolute inset-0 bg-gradient-to-br from-transparent to-blue-100"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"><MapPin size={48} className="text-red-500 drop-shadow-lg" /><div className="mt-4 bg-white px-4 py-2 rounded-xl shadow-xl border border-gray-100 text-xs font-bold text-gray-700">Event Location</div></div></div>;
+                      case 'divider': return <hr className="border-gray-200 my-10" />;
+                      case 'spacer': return <div className="h-16"></div>;
+                      case 'columns_2': return <div className="grid grid-cols-2 gap-8"><div className="p-6 border-2 border-dashed border-gray-100 rounded-2xl flex items-center justify-center text-gray-300 font-bold uppercase tracking-widest text-[10px]">Column 1</div><div className="p-6 border-2 border-dashed border-gray-100 rounded-2xl flex items-center justify-center text-gray-300 font-bold uppercase tracking-widest text-[10px]">Column 2</div></div>;
+                      case 'calculator': return <div className="p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 shadow-sm flex items-center justify-between"><div className="flex items-center gap-4 text-teal-700"><Calculator size={28} /><div className="flex flex-col"><span className="text-sm font-black uppercase tracking-widest">Smart Calculator</span><span className="text-xs font-medium opacity-60">Logic applied based on previous answers</span></div></div><div className="text-2xl font-black text-teal-600 tracking-tighter">$149.00</div></div>;
+                      case 'hidden_field': return <div className="hidden">Hidden Field - only visible in admin</div>;
+                      case 'address': return <div className="grid gap-4"><input type="text" placeholder="Street Address" className="w-full border-2 border-gray-100 rounded-2xl p-4 focus:border-teal-400 outline-none transition-all shadow-sm" /><div className="grid grid-cols-2 gap-4"><input type="text" placeholder="City" className="w-full border-2 border-gray-100 rounded-2xl p-4 focus:border-teal-400 outline-none transition-all shadow-sm" /><input type="text" placeholder="Zip Code" className="w-full border-2 border-gray-100 rounded-2xl p-4 focus:border-teal-400 outline-none transition-all shadow-sm" /></div></div>;
+                      case 'country': return <div className="relative"><Globe size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" /><select className="w-full border-2 border-gray-100 rounded-2xl p-4 pl-12 focus:border-teal-400 outline-none transition-all shadow-sm bg-white appearance-none"><option>Select a country...</option><option>United States</option><option>India</option><option>United Kingdom</option></select><ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" /></div>;
+                      case 'gdpr': return <label className="flex items-start gap-4 p-5 bg-blue-50/30 border border-blue-100 rounded-2xl cursor-pointer hover:bg-blue-50 transition-colors"><input type="checkbox" className="w-5 h-5 mt-0.5 rounded text-blue-600 focus:ring-blue-500" /><div className="flex-1"><span className="text-sm font-semibold text-gray-800 block mb-1">GDPR Compliance</span><span className="text-xs text-gray-600 leading-relaxed font-medium">I agree to the storage and processing of my personal data for event management purposes.</span></div></label>;
+                      case 'terms': return <label className="flex items-center gap-4 p-5 bg-gray-50 border border-gray-200 rounded-2xl cursor-pointer hover:bg-white transition-all"><input type="checkbox" className="w-5 h-5 rounded text-teal-600 focus:ring-teal-500" /><span className="text-sm font-bold text-gray-700">I have read and agree to the <span className="text-teal-600 underline">Terms and Conditions</span></span></label>;
+                      case 'payment': return <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-xl"><div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 p-6 flex justify-between items-center"><div className="flex items-center gap-4 text-white"><CreditCard size={32} className="opacity-60" /><div className="flex flex-col"><span className="text-xs font-black uppercase tracking-[0.2em] opacity-50">Secure Payment</span><span className="text-lg font-black tracking-tighter">Debit / Credit Card</span></div></div><div className="flex gap-2"><div className="w-8 h-5 bg-white/10 rounded flex items-center justify-center"><div className="w-4 h-4 bg-orange-400 rounded-full opacity-60 translate-x-1"></div><div className="w-4 h-4 bg-red-400 rounded-full opacity-60 -translate-x-1"></div></div></div></div><div className="p-6 bg-white space-y-4"><div className="flex flex-col gap-1.5"><label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Card Number</label><div className="w-full h-12 bg-gray-50 border border-gray-100 rounded-xl flex items-center px-4 font-mono text-gray-400 tracking-widest">•••• •••• •••• ••••</div></div></div></div>;
+                      case 'captcha': return <div className="p-6 rounded-2xl border border-gray-200 bg-white flex items-center justify-between shadow-lg max-w-sm mx-auto"><div className="flex items-center gap-4"><div className="w-8 h-8 border-2 border-gray-300 rounded hover:border-teal-500 transition-colors"></div><span className="text-sm font-black uppercase tracking-wide text-gray-600">I'm not a robot</span></div><div className="flex flex-col items-center"><User size={32} className="text-blue-500" /><span className="text-[6px] font-black uppercase mt-1 text-gray-400 tracking-tighter">reCAPTCHA</span></div></div>;
+                      case 'help_text': return <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100 shadow-sm flex items-start gap-4"><HelpCircle size={24} className="text-blue-500 shrink-0 mt-0.5" /><div className="space-y-1"><span className="text-sm font-black text-blue-900 uppercase tracking-widest">Important Information</span><p className="text-xs text-blue-700 leading-loose font-medium opacity-80">This section contains details about accessibility, security, and the registration timeline. Ensure all fields are filled accurately to avoid delays.</p></div></div>;
                       default: return <div className="p-3 bg-gray-50 border border-gray-100 rounded text-gray-400 text-sm italic">Preview for {block.type}</div>;
                     }
                   })()}
@@ -500,7 +559,7 @@ export default function FormsPage() {
             </div>
           )
         })}
-        <button className={`w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold py-3.5 rounded-xl mt-8 hover:shadow-lg hover:opacity-95 transition-all border border-teal-600 text-base`}>
+        <button className={`w-full submit-btn bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold py-3.5 rounded-xl mt-8 hover:shadow-lg hover:opacity-95 transition-all border border-teal-600 text-base`}>
           Submit Registration
         </button>
       </div>
@@ -508,15 +567,15 @@ export default function FormsPage() {
   );
 
   return (
-    <div className={`h-full flex flex-col animate-fade-in  backdrop-blur-sm relative ${themeFont.value}`} onKeyDown={(e) => { if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); } }}>
+    <div className={`forms-ui h-full flex flex-col animate-fade-in  backdrop-blur-sm relative ${themeFont.value}`} onKeyDown={(e) => { if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); } }}>
       <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-8 shadow-sm z-20">
         <div className="flex items-center gap-4">
           <Link href="/events" className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-all">
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Registration Form</h1>
-            {/* <p className="text-xs text-gray-500 font-medium">Create your registration form</p> */}
+            <h1 className="text-xl font-bold text-gray-900">Untitled form</h1>
+            {/* <p className="description muted">This Registration Form Description</p> */}
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -544,24 +603,30 @@ export default function FormsPage() {
       <main className="flex-1 overflow-hidden relative flex">
         <div className={`flex-1 overflow-y-auto custom-scrollbar p-0 transition-all ${showDesignPanel ? 'mr-0' : ''}`}>
           {view === 'build' ? (
-            <div className="max-w-3xl mx-auto py-12 px-12 min-h-full cursor-text pb-40">
-              <div className="mb-12 group relative rounded-2xl border-2 border-dashed border-gray-300 hover:border-gray-400 transition-all bg-gradient-to-br from-gray-50 to-white p-8 flex flex-col items-center justify-center min-h-[180px] shadow-sm hover:shadow-md">
-                {coverImage ? <div className="absolute inset-0 w-full h-full"><img src={coverImage} alt="Cover" className="w-full h-full object-cover rounded-xl opacity-75 group-hover:opacity-60 transition-opacity" /><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="bg-white/95 px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg">Change Cover Image</span></div></div> : <div className="flex flex-col items-center text-gray-400"><ImageIcon size={36} className="mb-3" /><span className="font-semibold text-gray-600">Add Cover Image</span><span className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</span></div>}
-                <input type="file" accept="image/*" onChange={handleCoverUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                <div className="absolute -bottom-8 left-8 w-24 h-24 bg-white rounded-2xl shadow-lg border-4 border-white flex items-center justify-center overflow-hidden z-10 group/logo cursor-pointer hover:shadow-xl transition-shadow">{logo ? <img src={logo} alt="Logo" className="w-full h-full object-contain" /> : <div className="bg-gray-100 w-full h-full flex items-center justify-center text-gray-300"><Upload size={18} /></div>}<input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /></div>
-              </div>
+            <div className="w-full mx-auto py-4 px-6 min-h-full pb-40 flex justify-center">
+              <div className="w-full max-w-3xl">
+                <div className="mb-6 group relative rounded-2xl border-2 border-dashed border-gray-300 hover:border-gray-400 transition-all bg-gradient-to-br from-gray-50 to-white p-6 flex flex-col items-center justify-center min-h-[160px]">
+                  {coverImage ? <div className="absolute inset-0 w-full h-full"><img src={coverImage} alt="Cover" className="w-full h-full object-cover rounded-xl opacity-75 group-hover:opacity-60 transition-opacity" /><div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="bg-white/95 px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg">Change Cover Image</span></div></div> : <div className="flex flex-col items-center text-gray-400"><ImageIcon size={36} className="mb-3" /><span className="font-semibold text-gray-600">Add Cover Image</span><span className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</span></div>}
+                  <input type="file" accept="image/*" onChange={handleCoverUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <div className="absolute -bottom-8 left-8 w-24 h-24 bg-white rounded-2xl shadow-lg border-4 border-white flex items-center justify-center overflow-hidden z-10 group/logo cursor-pointer hover:shadow-xl transition-shadow">{logo ? <img src={logo} alt="Logo" className="w-full h-full object-contain" /> : <div className="bg-gray-100 w-full h-full flex items-center justify-center text-gray-300"><Upload size={18} /></div>}<input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /></div>
+                </div>
 
-              {blocks.map((block, idx) => renderBlockEditor(block, idx))}
+                {blocks.map((block, idx) => (
+                  <React.Fragment key={block.id}>
+                    {renderBlockEditor(block, idx)}
+                  </React.Fragment>
+                ))}
 
-              <div className="mt-12 flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity justify-center py-8">
-                <div className="relative">
-                  <button onClick={() => setActiveMenu(activeMenu === 'bottom' ? null : 'bottom')} className={`flex items-center gap-2.5 px-5 py-3 text-sm font-semibold text-white rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 border border-teal-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200`}><Plus size={18} /> Add Block</button>
-                  {activeMenu === 'bottom' && <BlockMenu onSelect={(type) => addBlock(type, blocks.length - 1)} onClose={() => setActiveMenu(null)} />}
+                <div className="mt-8 flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity justify-center py-8">
+                  <div className="relative">
+                    <button onClick={() => setActiveMenu(activeMenu === 'bottom' ? null : 'bottom')} className={`flex items-center gap-2.5 px-5 py-3 text-sm font-semibold text-white rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 border border-teal-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200`}><Plus size={18} /> Add Block</button>
+                    {activeMenu === 'bottom' && <BlockMenu onSelect={(type) => addBlock(type, blocks.length - 1)} onClose={() => setActiveMenu(null)} />}
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-gray-50/50 min-h-full py-12 px-4">{renderPreview()}</div>
+            <div className="bg-gray-50/50 min-h-full py-6 px-4 flex justify-center">{renderPreview()}</div>
           )}
         </div>
 
