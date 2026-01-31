@@ -70,7 +70,7 @@ const TemplatesPage = () => {
 
     return (
         <div className={`overflow-x-hidden ${view !== 'builder' ? 'p-6 md:p-8' : ''}`}>
-            <div className="max-w-7xl mx-auto">
+            <div className="w-full mx-auto">
 
                 {/* 1. LANDING VIEW */}
                 {view === 'landing' && (

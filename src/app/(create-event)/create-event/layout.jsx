@@ -1,8 +1,16 @@
 import React from "react";
 import CreateEventSidebar from "@/components/create-event/CreateEventSidebar";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function CreateEventLayout({ children }) {
+export default async function CreateEventLayout({ children }) {
+     const cookieStore = await cookies();
+  const token = cookieStore.get("organizer_token")?.value;
+
+  if (!token) {
+    redirect("/organiser-login");
+  }
     return (
         <div className="flex h-screen overflow-auto bg-gradient-to-br from-green-500/20 via-yellow-400/20 to-orange-400/20">
             <CreateEventSidebar />

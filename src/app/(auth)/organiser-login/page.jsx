@@ -29,7 +29,7 @@ export default function LoginPage() {
         onClose: () => router.push("/dashboard")
       })
     } catch (err) {
-      alert(err.response?.data?.message);
+      toast.error(err.response?.data?.message);
     }
   };
 

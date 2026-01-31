@@ -5,7 +5,7 @@ import TemplateBuilderSidebar from "@/components/templates/TemplateBuilderSideba
 
 export default function EditorPage() {
     return (
-        <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
+        <div className="h-screen w-full bg-gray-50 overflow-hidden">
             {/* Left Sidebar */}
             <TemplateBuilderSidebar />
 
