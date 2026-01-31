@@ -12,7 +12,7 @@ export default function SettingsPage() {
     const router = useRouter();
     const [isPublishing, setIsPublishing] = useState(false);
     const [privacy, setPrivacy] = useState('public');
-    
+
     const [formData, setFormData] = useState({
         eventName: '',
         description: '',
@@ -41,7 +41,7 @@ export default function SettingsPage() {
 
     const validateForm = () => {
         const errors = [];
-        
+
         if (!formData.eventName.trim()) errors.push('Event name is required');
         if (!formData.description.trim()) errors.push('Event description is required');
         if (!formData.startDate) errors.push('Start date is required');
@@ -82,10 +82,10 @@ export default function SettingsPage() {
 
             if (result.success) {
                 // Show appropriate toast based on sync status
-                const message = result.syncedToServer 
-                    ? '✨ Event published and synced to server!'
-                    : '✨ Event published locally! (Will sync when server is available)';
-                
+                const message = result.syncedToServer
+                    ? 'Event published and synced to server!'
+                    : 'Event published locally! (Will sync when server is available)';
+
                 toast.success(message, {
                     className: 'unifiro-toast',
                     progressClassName: 'unifiro-toast-progress',
@@ -95,9 +95,9 @@ export default function SettingsPage() {
                 // Clear working data
                 clearWorkingData();
 
-                // Redirect to dashboard after 2 seconds
+                // Redirect to discovery page after 2 seconds
                 setTimeout(() => {
-                    router.push(`/dashboard/events/${result.eventId}`);
+                    router.push(`/discover`);
                 }, 2000);
             } else {
                 toast.error(`Failed to publish: ${result.error}`, {
@@ -154,23 +154,23 @@ export default function SettingsPage() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Event Name *</label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="eventName"
                                     value={formData.eventName}
                                     onChange={handleInputChange}
-                                    placeholder="e.g. Summer Music Festival" 
-                                    className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all" 
+                                    placeholder="e.g. Summer Music Festival"
+                                    className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                                <textarea 
-                                    rows={4} 
+                                <textarea
+                                    rows={4}
                                     name="description"
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    placeholder="Describe your event..." 
+                                    placeholder="Describe your event..."
                                     className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all resize-none"
                                 ></textarea>
                             </div>
@@ -187,44 +187,44 @@ export default function SettingsPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-                                    <input 
-                                        type="date" 
+                                    <input
+                                        type="date"
                                         name="startDate"
                                         value={formData.startDate}
                                         onChange={handleInputChange}
-                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" 
+                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
-                                    <input 
-                                        type="date" 
+                                    <input
+                                        type="date"
                                         name="endDate"
                                         value={formData.endDate}
                                         onChange={handleInputChange}
-                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" 
+                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
                                     />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
-                                    <input 
-                                        type="time" 
+                                    <input
+                                        type="time"
                                         name="startTime"
                                         value={formData.startTime}
                                         onChange={handleInputChange}
-                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" 
+                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
-                                    <input 
-                                        type="time" 
+                                    <input
+                                        type="time"
                                         name="endTime"
                                         value={formData.endTime}
                                         onChange={handleInputChange}
-                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" 
+                                        className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -243,13 +243,13 @@ export default function SettingsPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="location"
                                     value={formData.location}
                                     onChange={handleInputChange}
-                                    placeholder="123 Event St, City" 
-                                    className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" 
+                                    placeholder="123 Event St, City"
+                                    className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
                                 />
                             </div>
                         </div>
@@ -262,28 +262,26 @@ export default function SettingsPage() {
                             <h2 className="font-semibold text-lg">Privacy</h2>
                         </div>
                         <div className="flex items-center justify-around py-8">
-                            <div 
+                            <div
                                 onClick={() => setPrivacy('public')}
                                 className="text-center group cursor-pointer"
                             >
-                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all ${
-                                    privacy === 'public' 
-                                        ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400' 
-                                        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
-                                }`}>
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all ${privacy === 'public'
+                                    ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400'
+                                    : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                                    }`}>
                                     <Globe size={28} />
                                 </div>
                                 <span className={`font-medium ${privacy === 'public' ? 'text-blue-600' : 'text-gray-500'}`}>Public</span>
                             </div>
-                            <div 
+                            <div
                                 onClick={() => setPrivacy('private')}
                                 className="text-center group cursor-pointer"
                             >
-                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all ${
-                                    privacy === 'private' 
-                                        ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400' 
-                                        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
-                                }`}>
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all ${privacy === 'private'
+                                    ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-400'
+                                    : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                                    }`}>
                                     <Lock size={28} />
                                 </div>
                                 <span className={`font-medium ${privacy === 'private' ? 'text-blue-600' : 'text-gray-500'}`}>Private</span>

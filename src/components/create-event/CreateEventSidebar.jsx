@@ -16,7 +16,7 @@ import {
  */
 const navItems = [
     { name: "Create Event", id: "/create-event", icon: Pencil },
-    { name: "Template", id: "/create-event/templates", icon: LayoutTemplate },
+    { name: "Template", id: "/templates", icon: LayoutTemplate },
     { name: "Forms", id: "/create-event/forms", icon: FileText },
     { name: "Files", id: "/create-event/upload", icon: FolderOpen },
     { name: "Settings", id: "/create-event/settings", icon: Settings },

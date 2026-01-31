@@ -17,9 +17,45 @@ export const publishEvent = async (eventData) => {
         };
 
         // 2. SAVE TO LOCALSTORAGE (Local backup)
-        const publishedEvents = JSON.parse(localStorage.getItem('publishedEvents') || '[]');
-        publishedEvents.push(publishedEvent);
-        localStorage.setItem('publishedEvents', JSON.stringify(publishedEvents));
+        try {
+            const publishedEvents = JSON.parse(localStorage.getItem('publishedEvents') || '[]');
+            publishedEvents.push(publishedEvent);
+            localStorage.setItem('publishedEvents', JSON.stringify(publishedEvents));
+        } catch (e) {
+            if (e.name === 'QuotaExceededError' || e.code === 22) {
+                console.warn("LocalStorage full, attempting to save without images...");
+                // Create a 'lite' version without heavy images
+                const liteEvent = { ...publishedEvent };
+                if (liteEvent.resources) {
+                    liteEvent.resources = {
+                        ...liteEvent.resources,
+                        coverImage: null,
+                        logo: null,
+                        uploadedFiles: [] // Strip files too
+                    };
+                }
+                if (liteEvent.templateUsed) {
+                    liteEvent.templateUsed = {
+                        ...liteEvent.templateUsed,
+                        image: null,
+                        items: liteEvent.templateUsed.items // Keep structure but remove preview image if any
+                    };
+                }
+
+                try {
+                    const publishedEvents = JSON.parse(localStorage.getItem('publishedEvents') || '[]');
+                    publishedEvents.push(liteEvent);
+                    localStorage.setItem('publishedEvents', JSON.stringify(publishedEvents));
+                    alert("Storage limit reached. Event saved without images.");
+                } catch (retryError) {
+                    console.error("Critical storage failure", retryError);
+                    alert("Storage is full. Please delete old events or templates to make space.");
+                    return { success: false, error: "Storage full" };
+                }
+            } else {
+                throw e;
+            }
+        }
 
         // 3. ATTEMPT API CALL (Optional - for backend sync)
         try {
@@ -78,7 +114,7 @@ export const collectEventData = (settingsData) => {
     const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
     const coverImage = localStorage.getItem('coverImage');
     const logo = localStorage.getItem('logo');
-    const personalTemplate = localStorage.getItem('selectedTemplate');
+    const personalTemplate = localStorage.getItem('selectedTemplate') || localStorage.getItem('selectedTemplateForEvent');
 
     return {
         // Event Details
@@ -87,7 +123,7 @@ export const collectEventData = (settingsData) => {
         dateTime: settingsData.dateTime,
         location: settingsData.location,
         privacy: settingsData.privacy || 'public',
-        
+
         // Form Configuration
         formBlocks: formBlocks,
         formSettings: {
@@ -99,7 +135,7 @@ export const collectEventData = (settingsData) => {
         // Media & Files
         resources: {
             uploadedFiles: uploadedFiles,
-            coverImage: coverImage,
+            coverImage: coverImage || (personalTemplate ? JSON.parse(personalTemplate).image : null),
             logo: logo
         },
 
@@ -116,13 +152,14 @@ export const collectEventData = (settingsData) => {
 };
 
 /**
- * Clear working data after successful publish
+ * working data after successful publish
  */
 export const clearWorkingData = () => {
     localStorage.removeItem('formBlocks');
     localStorage.removeItem('uploadedFiles');
     localStorage.removeItem('currentFormData');
     localStorage.removeItem('selectedTemplate');
+    localStorage.removeItem('selectedTemplateForEvent');
     // Keep personal templates and cover/logo if user wants to reuse
 };
 
@@ -152,19 +189,38 @@ export const getEventById = (eventId) => {
 export const updateEventStatus = (eventId, status) => {
     const events = getPublishedEvents();
     const eventIndex = events.findIndex(e => e.id === eventId);
-    
+
     if (eventIndex !== -1) {
         events[eventIndex].status = status;
         localStorage.setItem('publishedEvents', JSON.stringify(events));
-        
+
         // Try to sync with backend
         fetch(`/api/events/${eventId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status })
         }).catch(e => console.warn('Could not sync status to server:', e));
-        
+
         return true;
     }
     return false;
+};
+
+/**
+ * Delete event by ID
+ */
+export const deleteEvent = (eventId) => {
+    try {
+        const events = getPublishedEvents();
+        const updatedEvents = events.filter(e => e.id !== eventId);
+        localStorage.setItem('publishedEvents', JSON.stringify(updatedEvents));
+
+        // Also try to delete from server if needed (optional)
+        // fetch(`/api/events/${eventId}`, { method: 'DELETE' }).catch(() => {});
+
+        return true;
+    } catch (e) {
+        console.error("Failed to delete event", e);
+        return false;
+    }
 };

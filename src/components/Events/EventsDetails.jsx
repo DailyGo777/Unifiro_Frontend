@@ -40,7 +40,7 @@ export default function EventExperience({ event }) {
               Event Highlights
             </h3>
             <ul className="space-y-2 text-gray-700">
-              {event.highlights.map((item, idx) => (
+              {event.highlights?.map((item, idx) => (
                 <li key={idx} className="flex items-start gap-2">
                   <span>🚀</span>
                   <span>{item}</span>

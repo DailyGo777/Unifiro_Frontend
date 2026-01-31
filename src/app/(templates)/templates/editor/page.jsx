@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import TemplateBuilderSidebar from "@/components/create-event/TemplateSection/TemplateBuilderSidebar";
+import TemplateBuilderSidebar from "@/components/templates/TemplateBuilderSidebar";
 
 export default function EditorPage() {
     return (

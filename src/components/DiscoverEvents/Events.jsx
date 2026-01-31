@@ -1,4 +1,6 @@
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CalendarClock,
   AlarmClock,
@@ -6,10 +8,35 @@ import {
   UsersRound,
   IndianRupee,
 } from "lucide-react";
-import { events } from "@/utils/data";
+import { events as staticEvents } from "@/utils/data";
+import { getPublishedEvents, deleteEvent } from "@/utils/publishEvent";
 import Image from "next/image";
 
 export default function Events() {
+  const router = useRouter();
+  const [displayEvents, setDisplayEvents] = useState(staticEvents);
+
+  useEffect(() => {
+    const published = getPublishedEvents();
+    if (published && published.length > 0) {
+      const formatted = published.map(event => ({
+        id: event.id,
+        title: event.eventName,
+        description: event.description,
+        img: event.resources?.coverImage || "/hero_kan.png",
+        calendar: event.dateTime ? new Date(event.dateTime).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : "Date TBD",
+        time: event.dateTime ? new Date(event.dateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : "Time TBD",
+        location: event.location || "Location TBD",
+        attendees: "0 people",
+        price: event.price || "0",
+        slug: event.id, // Use ID as slug for locally created events
+        isLocal: true,
+        template: event.template
+      }));
+      setDisplayEvents([...formatted, ...staticEvents]);
+    }
+  }, []);
+
   return (
     <div className="w-full bg-white px-12 py-4 lg:px-28 lg:py-16">
       <h1 className="text-center text-black text-6xl font-semibold pb-12">
@@ -17,7 +44,7 @@ export default function Events() {
       </h1>
 
       <div className="flex flex-col gap-8">
-        {events.map((event) => (
+        {displayEvents.map((event) => (
           <div
             key={event.id}
             className="rounded-4xl p-0.5 bg-linear-to-r from-orange-400 via-yellow-400 to-green-400"
@@ -77,16 +104,39 @@ export default function Events() {
                       </div>
                     </div>
 
-                    <div className="md:col-span-1 flex justify-end">
-                      <Link
-                        href={event.slug ? `/events/${event.slug}` : event.url}
-                        target={!event.slug ? "_blank" : undefined}
-                        className="w-full lg:w-auto"
-                      >
-                        <button className="w-full lg:w-auto px-10 py-3 rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-teal-400 to-lime-400 hover:shadow-lg hover:opacity-90 transition-all cursor-pointer">
-                          Register
+                    <div className="md:col-span-1 flex justify-end gap-3">
+                      {event.isLocal && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this event?")) {
+                              deleteEvent(event.id);
+                              // Refresh list removing the deleted event
+                              setDisplayEvents(prev => prev.filter(e => e.id !== event.id));
+                            }
+                          }}
+                          className="px-4 py-3 rounded-xl text-lg font-semibold text-red-500 border border-red-200 hover:bg-red-50 transition-all cursor-pointer"
+                          title="Delete Event"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c0-1-1-2-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c0 1 1 2 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
                         </button>
-                      </Link>
+                      )}
+                      {event.isLocal ? (
+                        <Link href={`/events/${event.id}/template-preview`} className="w-full lg:w-auto">
+                          <button className="w-full lg:w-auto px-10 py-3 rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-teal-400 to-lime-400 hover:shadow-lg hover:opacity-90 transition-all cursor-pointer">
+                            Register
+                          </button>
+                        </Link>
+                      ) : (
+                        <Link
+                          href={event.slug ? `/events/${event.slug}` : event.url}
+                          target={!event.slug ? "_blank" : undefined}
+                          className="w-full lg:w-auto"
+                        >
+                          <button className="w-full lg:w-auto px-10 py-3 rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-teal-400 to-lime-400 hover:shadow-lg hover:opacity-90 transition-all cursor-pointer">
+                            Register
+                          </button>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>

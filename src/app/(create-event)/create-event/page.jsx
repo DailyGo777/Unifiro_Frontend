@@ -9,9 +9,9 @@ export default function CreateEventPage() {
 
             <div className="flex flex-col items-center text-center max-w-2xl mx-auto space-y-8">
 
-                <Link href="/create-event/templates">
+                <Link href="/templates">
                     <button
-                        className="group relative flex flex-col items-center justify-center w-48 h-40 rounded-3xl bg-gradient-to-r from-[#20B3BC] via-[#13C998] to-[#CFC31E] shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+                        className="group relative flex flex-col items-center justify-center w-48 h-40 rounded-[32px] bg-gradient-to-r from-[#20B3BC] via-[#13C998] to-[#CFC31E] shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
                         aria-label="Create new event"
                     >
                         <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />

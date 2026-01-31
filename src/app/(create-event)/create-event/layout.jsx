@@ -17,7 +17,7 @@ export default function CreateEventLayout({ children }) {
                     </Link>
                 </header>
 
-                <main className="flex-1 p-8 overflow-auto bg-gradient-to-br from-teal-50/50 via-green-50/50 to-lime-50/50">
+                <main className="flex-1 overflow-auto bg-gradient-to-br from-teal-50/50 via-green-50/50 to-lime-50/50">
                     {children}
                 </main>
             </div>
