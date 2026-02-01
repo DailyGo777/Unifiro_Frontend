@@ -24,6 +24,8 @@ const TemplatesPage = () => {
     const [personalTemplates, setPersonalTemplates] = useState([]);
     const [editingTemplate, setEditingTemplate] = useState(null);
 
+    console.log(JSON.stringify(personalTemplates))
+
     const categories = ["All", "Creators", "Product", "Marketing", "Personal"];
     const gradientClass = "bg-gradient-to-r from-orange-400 via-lime-400 to-green-400";
 
